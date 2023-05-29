@@ -444,10 +444,10 @@ int chooseTrump(gameDirector* gd, team teams[amountTeams], int resultTrumpPlayer
             resultTrumpPlayer[1] = 1;
             // setActualPlayer(&gd, 1, 1);
             break;
+
         default:
             printf("Entier non valide.\n");
-            goto a;
-            break;
+            goto a;            
     }          
 }
 
@@ -489,35 +489,78 @@ void secondDeal(gameDirector* gd, team teams[amountTeams], int trumpPlayer[2]) {
 }
 
 int chooseCard(int player) {
+         
+    printf("\nChoisir quelle carte jouer:\n");
 
-
-    return 1;
+    a:
+    int input;
+    scanf("%d", &input);
+    getchar();
+    
+    switch (input) {
+        case 1:
+            printf("Vous avez saisi 1.\n"); 
+            return 0;           
+        case 2:
+            printf("Vous avez saisi 2.\n");       
+            return 1;
+        case 3:
+            printf("Vous avez saisi 3.\n");      
+            return 2;
+        case 4:
+            printf("Vous avez saisi 4.\n");        
+            return 3;
+        case 5:
+            printf("Vous avez saisi 5.\n");        
+           return 4;
+        case 6:
+            printf("Vous avez saisi 6.\n");      
+            return 5;
+        case 7:
+            printf("Vous avez saisi 7.\n");      
+            return 6;
+        case 8:
+            printf("Vous avez saisi 8.\n");        
+            return 7;
+      
+        default:
+            printf("Entier non valide.\n");
+            goto a;           
+    } 
 }
 
 void addCardToTrick(card c, card trick[trickCards], int trickIndex) {
 
-    trick[trickIndex] = c;
+    trick[trickIndex] = c;   
 }
 
 void playCard(gameDirector* gd, card playerHand[playersCards], int trickIndex, int pHIndex) {
     
-    addCardToTrick(playerHand[pHIndex], gd->trick, trickIndex);
-    removeCardFromPlayerHand(playerHand, pHIndex);
+    addCardToTrick(playerHand[pHIndex], gd->trick, trickIndex);  
+    removeCardFromPlayerHand(playerHand, pHIndex);  
 }
 
 void play(gameDirector* gd, team teams[amountTeams]) {
 
     int choosenCardIndex = 0;
     int player = 1;
-    for (int i = 0, k = 0; i < teamsPlayers; i++) {
+    int trickIndex = 0;
+
+    for (int i = 0, k = trickIndex; i < teamsPlayers; i++) {
 
         for (int j = 0; j < amountTeams; j++, k++, player++) {  
 
-            choosenCardIndex = chooseCard(player);
+            choosenCardIndex = chooseCard(player);            
             playCard(gd, teams[j].playerHand[i], k, choosenCardIndex);
             nextPlayer(gd);
         }
     }   
+}
+
+void checkTrickResult(gameDirector gd) {
+
+    
+
 }
 
 int initWindow(SDL_Window* window, SDL_Renderer* renderer, int width, int height) {
@@ -695,7 +738,7 @@ int SDL_main(int argc, char *argv[]) {
     {   
         printf("\n\ntrick:\n");
         for (int i = 0; i < trickCards; i++) {
-            printf("i:%d, \"%d:%d\" - ", i, gd.trick->color, gd.trick->number);
+            printf("i:%d, \"%d:%d\" - ", i, gd.trick[i].color, gd.trick[i].number);
         }
     }
     {
@@ -728,10 +771,12 @@ int SDL_main(int argc, char *argv[]) {
     {   
         printf("\n\ntrick:\n");
         for (int i = 0; i < trickCards; i++) {
-            printf("i:%d, \"%d:%d\" - ", i, gd.trick->color, gd.trick->number);
+            printf("i:%d, \"%d:%d\" - ", i, gd.trick[i].color, gd.trick[i].number);
         }
     }
-     
+
+    checkTrickResult();
+
     SDL_Event event;
     int quit = 0;    
     while (!quit) {
