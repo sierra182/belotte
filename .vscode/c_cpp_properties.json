@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:\\mingw64\\include\\c++",
+                "C:\\SDL2-2.26.5\\include",
+                "C:\\SDL2_ttf-2.20.2\\x86_64-w64-mingw32\\include",
+                "C:\\SDL2_image-devel-2.6.3-mingw\\SDL2_image-2.6.3\\x86_64-w64-mingw32\\include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:\\mingw64\\bin\\gcc.exe",
+            "intelliSenseMode": "gcc-x64",
+            "cStandard": "c99"
+        }
+    ],
+    "version": 4
+}
