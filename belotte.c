@@ -18,18 +18,26 @@
 #define amountColor 4
 
 #define modelOrder 7, 8, 9, 11, 12, 13, 10, 14
+#define modelOrderValues 0, 0, 0, 2, 3, 4, 10, 11
+
 #define trumpModelOrder 7, 8, 12, 13, 10, 14, 9, 11
+#define trumpModelOrderValues 0, 0, 3, 4, 10, 11, 14, 20
 
 typedef struct {
 
     int number;
     int color;
+
 } card;
 
 typedef struct {
 
     card tricksStack[totalCards];
-    card playerHand[teamsPlayers][playersCards];      
+    card playerHand[teamsPlayers][playersCards];   
+
+    int score;
+    int tricksStackIndex;
+
 } team;
 
 typedef struct {
@@ -37,14 +45,16 @@ typedef struct {
     card deck[totalCards];
     card trick[trickCards];
     card trump;
+
     int team;
-    int player;    
+    int player;  
+
 } gameDirector;
 
 void initCard(card* c) {
 
     c->number = 0;
-    c->color = 0;
+    c->color = 0;     
 }
 
 void initDeckBelotteStyle(card deck[totalCards]) {
@@ -113,6 +123,8 @@ void initTeams(team teams[amountTeams]) {
         }
          
         initTricksStack(teams[i].tricksStack);
+        teams[i].score = 0;
+        teams[i].tricksStackIndex = 0;
     }     
 }
 
@@ -151,7 +163,7 @@ void shuffleCards(card deck[totalCards]) {
 }
 
 void nextPlayer(gameDirector* gd) {
-
+  
     int t = gd->team - 1;
     int p = gd->player - 1;
     int count = 0;
@@ -162,9 +174,9 @@ void nextPlayer(gameDirector* gd) {
          
             for (int k = t; k < amountTeams; k++, count++) { 
 
-                if (count >= 2) {
+                if (count >= 2) { 
                     return;
-                }
+                }  
 
                 gd->team = k + 1;
                 gd->player = j + 1;
@@ -172,7 +184,7 @@ void nextPlayer(gameDirector* gd) {
             t = 0;
         }
         p = 0;
-    }  
+    } 
 }
 
 void firstDealBis(gameDirector* gd, team teams[amountTeams]) {   // Inutile
@@ -260,24 +272,6 @@ void firstDeal(gameDirector* gd, team teams[amountTeams]) {
             t = 0;
         }
         p = 0; 
-    }
-}
-
-void insertionSortAscending(int array[], int size) {            // inutile
-
-    int i = 0, key = 0, j = 0;
-
-    for (i = 1; i < size; i++) {
-
-        key = array[i];
-        j = i - 1;
-
-        while (j >= 0 && array[j] > key) {
-
-            array[j + 1] = array[j];
-            j = j - 1;
-        }
-        array[j + 1] = key;
     }
 }
 
@@ -392,12 +386,6 @@ void removeCardFromPlayerHand(card playerHand[playersCards], int pHIndex) {
     initCard(&playerHand[pHIndex]);
 }
 
-void setActualPlayer(gameDirector* gd, int team, int player) {
-
-    gd->team = team;
-    gd->player = player;
-}
-
 void modifyTrump(gameDirector* gd) {
   
     gd->trump = gd->deck[firstDealMaxCards * players];
@@ -488,9 +476,27 @@ void secondDeal(gameDirector* gd, team teams[amountTeams], int trumpPlayer[2]) {
     }    
 }
 
-int chooseCard(int player) {
-         
-    printf("\nChoisir quelle carte jouer:\n");
+int getPlayerFromGameDirector(gameDirector gd) {
+
+    int result = 0;
+    int p = gd.player - 1;
+    int t = gd.team - 1;
+    
+    for (int i = p; i < teamsPlayers; i++)
+    {
+        for (int j = t; j < amountTeams; j++)
+        { 
+           result++;
+        }
+        t = 0;
+    }   
+    return players - result + 1;    
+}
+
+int chooseCard(gameDirector gd) {
+
+    int player = getPlayerFromGameDirector(gd); 
+    printf("\nJoueur %d, Choisir quelle carte jouer:\n", player);
 
     a:
     int input;
@@ -546,22 +552,197 @@ void play(gameDirector* gd, team teams[amountTeams]) {
     int player = 1;
     int trickIndex = 0;
 
-    for (int i = 0, k = trickIndex; i < teamsPlayers; i++) {
+    initTrick(gd->trick);
 
-        for (int j = 0; j < amountTeams; j++, k++, player++) {  
-
-            choosenCardIndex = chooseCard(player);            
-            playCard(gd, teams[j].playerHand[i], k, choosenCardIndex);
-            nextPlayer(gd);
-        }
+    for (int i = trickIndex; i < players; i++) {
+       
+        choosenCardIndex = chooseCard(*gd);                    
+        playCard(gd, teams[gd->team-1].playerHand[gd->player-1], i, choosenCardIndex);    
+        nextPlayer(gd);        
     }   
 }
 
-void checkTrickResult(gameDirector gd) {
+void copyTrickToTeam(gameDirector gd, team* t) {
 
-    
+    int temp = t->tricksStackIndex;
+        for (int i = 0; i < trickCards; i++, temp++) {
 
+            t->tricksStack[temp] = gd.trick[i];            
+        }
+    t->tricksStackIndex = temp;
 }
+
+int compareTrickCardWithWinningCard(card trickCard, card* winningCard, int model[playersCards]) {
+   
+    card temp[2] = {0, 0};  
+
+    for (int i = 0, j = 0; i < playersCards; i++) {
+        
+        if (model[i] == winningCard->number) {          
+            temp[j] = *winningCard;          
+            j++;
+        }
+        else if (model[i] == trickCard.number) {
+          
+            temp[j] = trickCard;          
+            j++;
+        }        
+    }
+    
+    if (winningCard->number != temp[1].number) {
+
+        winningCard->color = temp[1].color;
+        winningCard->number = temp[1].number;  
+        return 1;
+    }    
+    return 0;
+}
+
+void testCompareTrickCardWithWinningCard() { 
+    
+    int model[playersCards] = {modelOrder};  
+    int trumpModel[playersCards] = {trumpModelOrder};
+
+    card deck1[playersCards];    
+    card deck2[playersCards];
+    for (int i = 0; i < playersCards; i++) {
+
+        deck1[i].number = i + 7;
+        deck1[i].color = 1;
+        deck2[i].number = i + 7;
+        deck2[i].color = 1;
+    }
+   
+    for (int i = 0; i < playersCards; i++) {
+
+        for (int j = 0; j < playersCards; j++) {
+            
+            if (i == j) {
+                break;
+            }
+            card temp = deck2[j];
+            printf("trickCard: %d:%d, winningCard: %d:%d, model\n", deck1[i].color, deck1[i].number, deck2[j].color, deck2[j].number);
+            int result = compareTrickCardWithWinningCard(deck1[i], &deck2[j], trumpModel);
+            printf("trickCard: %d:%d, winningCard: %d:%d, model, result:%d \n\n", deck1[i].color, deck1[i].number, deck2[j].color, deck2[j].number, result); 
+            deck2[j] = temp;
+        }
+    }
+}
+
+int calculateScore(gameDirector gd) {
+
+    int score = 0;
+
+    int trumpModel[playersCards] = {trumpModelOrder};
+    int trumpModelValues[playersCards] = {trumpModelOrderValues};
+
+    int Model[playersCards] = {modelOrder};
+    int ModelValues[playersCards] = {modelOrderValues};
+
+    if (gd.trump.color == gd.trick[0].color) {
+
+        for (int i = 0; i < trickCards; i++) {
+
+            for (int j = 0; j < playersCards; j++) {
+
+                if (gd.trick[i].number == trumpModel[j]) {
+
+                    score += trumpModelValues[j];
+                }
+            }
+             
+        }
+    }
+    else {
+
+        for (int i = 0; i < trickCards; i++) {
+
+            for (int j = 0; j < playersCards; j++) {
+
+                if (gd.trick[i].number == Model[j]) {
+
+                    score += ModelValues[j];
+                }
+            }             
+        }
+    }
+    return score;
+}
+
+void checkTrickResult(gameDirector* gd, team teams[amountTeams]) {
+
+    int model[playersCards] = {modelOrder};
+    int trumpModel[playersCards] = {trumpModelOrder}; 
+
+    card winningCard = gd->trick[0];  
+    int winningTeam = gd->team;
+    int winningPlayer = gd->player;
+    
+    int trickIndex = 1;
+    int isReplaced = 0;
+
+    nextPlayer(gd);  
+
+    if (gd->trick[0].color == gd->trump.color) {
+
+        for (int i = 1; i < trickCards; i++) {            
+ 
+            if (gd->trick[i].color == winningCard.color) {            
+                isReplaced = compareTrickCardWithWinningCard(gd->trick[i], &winningCard, trumpModel);
+                if (isReplaced) {
+
+                    winningTeam = gd->team;
+                    winningPlayer = gd->player;
+                }
+            }
+            nextPlayer(gd);
+        }    
+    }    
+    else {
+
+        for (int i = 1; i < trickCards; i++) {           
+
+            if (gd->trick[i].color != gd->trump.color) {
+
+                if (winningCard.color == gd->trick[i].color) {
+                   
+                    isReplaced = compareTrickCardWithWinningCard(gd->trick[i], &winningCard, model);                    
+                    if (isReplaced) {
+
+                        winningTeam = gd->team;
+                        winningPlayer = gd->player;
+                    }
+                }
+            }
+            else { 
+
+                if (winningCard.color == gd->trump.color) {
+                    
+                    isReplaced = compareTrickCardWithWinningCard(gd->trick[i], &winningCard, trumpModel);
+                    
+                    if (isReplaced) {
+
+                        winningTeam = gd->team;
+                        winningPlayer = gd->player;
+                    }    
+                }
+                else {
+
+                    winningTeam = gd->team;
+                    winningPlayer = gd->player;
+                    winningCard = gd->trick[i];
+                }                
+            }
+            nextPlayer(gd);
+        }
+    }    
+   
+    teams[winningTeam - 1].score += calculateScore(*gd);     
+    copyTrickToTeam(*gd, &teams[winningTeam - 1]);  
+
+    gd->team = winningTeam;
+    gd->player = winningPlayer;    
+} 
 
 int initWindow(SDL_Window* window, SDL_Renderer* renderer, int width, int height) {
 
@@ -599,7 +780,7 @@ int initWindow(SDL_Window* window, SDL_Renderer* renderer, int width, int height
 
 int SDL_main(int argc, char *argv[]) {
 
-    printf("hello world!\n\n");
+    printf("hello world!\n\n"); 
 
     const int windowWidth = 500;
     const int windowHeight = 500;
@@ -624,7 +805,6 @@ int SDL_main(int argc, char *argv[]) {
     {
         printf("team: %d, player: %d\n\n", gd.team, gd.player);    
     }
-    
     {   
         for (int i = 0; i < totalCards; i++) {
             printf("*%d \"%d:%d\" ",i,  gd.deck[i].color, gd.deck[i].number);
@@ -646,7 +826,6 @@ int SDL_main(int argc, char *argv[]) {
             printf("\"%d:%d\" - ", teams[1].playerHand[1][i].color, teams[1].playerHand[1][i].number);
         }  
     }  
-
     {
         printf("\n\nnow firstDeal\n\n"); 
     }
@@ -682,7 +861,7 @@ int SDL_main(int argc, char *argv[]) {
         printf("\nAtout: %d, %d", gd.trump.color, gd.trump.number);
     }
     {
-        printf("\n\nnow sortPlayerHand\n\n"); 
+        printf("\n\nnow secondDeal\n\n"); 
     }  
 
     secondDeal(&gd, teams, trumpPlayer);
@@ -712,9 +891,11 @@ int SDL_main(int argc, char *argv[]) {
         printf("\n\nnow sortALLHands\n\n"); 
     }
 
-    sortAllPlayersHands(gd, teams);                //// test
+    sortAllPlayersHands(gd, teams);                
 
-    {   
+    for (int i = 0; i < totalCards / trickCards; i++) {
+    
+        {   
         for (int i = 0; i < totalCards; i++) {
             printf("*%d \"%d:%d\" ",i,  gd.deck[i].color, gd.deck[i].number);
         }         
@@ -735,19 +916,25 @@ int SDL_main(int argc, char *argv[]) {
             printf("\"%d:%d\" - ", teams[1].playerHand[1][i].color, teams[1].playerHand[1][i].number);
         }  
     }  
-    {   
-        printf("\n\ntrick:\n");
-        for (int i = 0; i < trickCards; i++) {
-            printf("i:%d, \"%d:%d\" - ", i, gd.trick[i].color, gd.trick[i].number);
+        {   
+            printf("\n\ntrick:\n");
+            for (int i = 0; i < trickCards; i++) {
+                printf("i:%d, \"%d:%d\" - ", i, gd.trick[i].color, gd.trick[i].number);
+            }
         }
-    }
-    {
-        printf("\n\nnow sortALLHands\n\n"); 
-    }
+        {
+            printf("\n\nnow play\n\n"); 
+        }
+        {
+            printf("team: %d, player: %d\n\n", gd.team, gd.player);    
+        }
+        
+        play(&gd, teams);
 
-    play(&gd, teams);
-
-    {   
+        {
+            printf("A :team: %d, player: %d\n\n", gd.team, gd.player);    
+        }    
+        {   
         for (int i = 0; i < totalCards; i++) {
             printf("*%d \"%d:%d\" ",i,  gd.deck[i].color, gd.deck[i].number);
         }         
@@ -768,14 +955,36 @@ int SDL_main(int argc, char *argv[]) {
             printf("\"%d:%d\" - ", teams[1].playerHand[1][i].color, teams[1].playerHand[1][i].number);
         }  
     }  
-    {   
-        printf("\n\ntrick:\n");
-        for (int i = 0; i < trickCards; i++) {
-            printf("i:%d, \"%d:%d\" - ", i, gd.trick[i].color, gd.trick[i].number);
+        {   
+            printf("\n\ntrick:\n");
+            for (int i = 0; i < trickCards; i++) {
+                printf("i:%d, \"%d:%d\" - ", i, gd.trick[i].color, gd.trick[i].number);
+            }
         }
-    }
 
-    checkTrickResult();
+        checkTrickResult(&gd, teams);
+
+        {
+            printf("B team: %d, player: %d\n\n", gd.team, gd.player);    
+        }
+        {
+            printf("\n\naftercheck");
+        }
+        {   
+            printf("\n\ntricksStack team 0:\n");
+            for (int i = 0; i < totalCards; i++) {
+                printf("i:%d,%d \"%d:%d\" - ", i, teams[0].tricksStackIndex, teams[0].tricksStack[i].color, teams[0].tricksStack[i].number);
+            }
+            printf("team 0 score:%d\n", teams[0].score);
+        }
+        {   
+        printf("\n\ntricksStack team 1:\n");
+            for (int i = 0; i < totalCards; i++) {
+                printf("i:%d,%d \"%d:%d\" - ", i, teams[1].tricksStackIndex, teams[1].tricksStack[i].color, teams[1].tricksStack[i].number);
+        }
+            printf("team 1 score:%d\n", teams[1].score);
+        }        
+    }
 
     SDL_Event event;
     int quit = 0;    
