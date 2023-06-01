@@ -744,7 +744,7 @@ void checkTrickResult(gameDirector* gd, team teams[amountTeams]) {
     gd->player = winningPlayer;    
 } 
 
-int initWindow(SDL_Window* window, SDL_Renderer* renderer, int width, int height) {
+int initWindow(SDL_Window** window, SDL_Renderer** renderer, int width, int height) {
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0) { 
 
@@ -752,42 +752,93 @@ int initWindow(SDL_Window* window, SDL_Renderer* renderer, int width, int height
         return 1;
     }
 
-    window = SDL_CreateWindow("Belotte",
+    *window = SDL_CreateWindow("Belotte",
                               SDL_WINDOWPOS_UNDEFINED,
                               SDL_WINDOWPOS_UNDEFINED,
                               width,
                               height,
-                              SDL_WINDOW_SHOWN);
+                              SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
                            
-    if (window == NULL) {
+    if (*window == NULL) {
       
         printf("Erreur de création de la fenêtre: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;
     }
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
     
-    if (renderer == NULL) {      
+    if (*renderer == NULL) {      
 
         printf("Erreur de création du renderer: %s\n", SDL_GetError());
-        SDL_DestroyWindow(window);
+        SDL_DestroyWindow(*window);
         SDL_Quit();
         return 1;
     }    
     return 0;
 }
 
+void initDeckTextures(SDL_Texture* textureCard[amountColor][playersCards], SDL_Renderer** renderer) {
+    
+    char filePath[50]; 
+    for (int i = 1; i <= amountColor; i++) {
+        
+        for (int j = 1; j <= playersCards; j++) {
+
+            sprintf(filePath, "C:\\belotte\\cards\\%dcard%d.png", i, j);
+            SDL_Surface* surfaceCard = IMG_Load(filePath);         
+            textureCard[i - 1][j - 1] = SDL_CreateTextureFromSurface(*renderer, surfaceCard);
+            SDL_FreeSurface(surfaceCard);           
+        }
+    }
+}
+
+int decal = 0;
+void initDeckTextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight) {
+    
+    destRectCard->w = .10 * windowHeight;
+    destRectCard->h = .15 * windowHeight;
+    destRectCard->x = (windowWidth/2 - destRectCard->w/2) + decal;
+    destRectCard->y = windowHeight/2 - destRectCard->h/2;
+    decal += 10;
+}
+
+void initDeckTexturesDestRects(SDL_Rect destRectsCard[amountColor][playersCards], int windowWidth, int windowHeight) {
+
+     for (int i = 0; i < amountColor; i++){  
+
+        for (int j = 0; j < playersCards; j++){
+
+            initDeckTextureDestRect(&destRectsCard[i][j], windowWidth, windowHeight);
+        }
+    }     
+}
+
+void initPlaymatTexture(SDL_Texture** texturePlaymat, SDL_Renderer** renderer) {
+
+    SDL_Surface* surfacePlaymat = IMG_Load("C:\\belotte\\playmat.png");    
+    *texturePlaymat = SDL_CreateTextureFromSurface(*renderer, surfacePlaymat);
+    SDL_FreeSurface(surfacePlaymat);
+}
+
+void initPlaymatTextureDestRect(SDL_Rect* destRectPlaymat, int windowWidth, int windowHeight) {
+
+    destRectPlaymat->w = .8 * windowHeight;
+    destRectPlaymat->h = .8 * windowHeight;
+    destRectPlaymat->x = windowWidth/2 - destRectPlaymat->w/2;
+    destRectPlaymat->y = windowHeight/2 - destRectPlaymat->h/2;
+}
+
 int SDL_main(int argc, char *argv[]) {
 
     printf("hello world!\n\n"); 
 
-    const int windowWidth = 500;
-    const int windowHeight = 500;
+    const int windowWidth = 600;
+    const int windowHeight = 600;
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
     
-    if (initWindow(window, renderer, windowWidth, windowHeight)) {
+    if (initWindow(&window, &renderer, windowWidth, windowHeight)) {
         return 1;
     }
 
@@ -798,7 +849,7 @@ int SDL_main(int argc, char *argv[]) {
     initGameDirector(&gd);
   
     shuffleCards(gd.deck); 
-    
+    /*
     gd.team = 2;
     gd.player = 1;
 
@@ -985,22 +1036,63 @@ int SDL_main(int argc, char *argv[]) {
             printf("team 1 score:%d\n", teams[1].score);
         }        
     }
+    */
+       
+    SDL_Texture* texturePlaymat;
+    initPlaymatTexture(&texturePlaymat, &renderer);    
+    SDL_Rect destRectPlaymat;          
+    initPlaymatTextureDestRect(&destRectPlaymat, windowWidth, windowHeight);
+       
+    SDL_Texture* texturesCard[amountColor][playersCards];
+    initDeckTextures(texturesCard, &renderer);
+
+    SDL_Rect destRectsCard[amountColor][playersCards];
+    initDeckTexturesDestRects(destRectsCard, windowWidth, windowHeight);
+              
 
     SDL_Event event;
     int quit = 0;    
     while (!quit) {
 
         SDL_Delay(16);
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderClear(renderer);     
+
         while (SDL_PollEvent(&event) != 0) {
+
             if (event.type == SDL_QUIT) {
                 quit = 1;
             }
-        }
+            else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED) {
+           
+                int newWidth = event.window.data1;
+                int newHeight = event.window.data2;
+                initPlaymatTextureDestRect(&destRectPlaymat, newWidth, newHeight);              
+            }
+        }  
+
+        SDL_RenderCopy(renderer, texturePlaymat, NULL, &destRectPlaymat);
+
+        for (int i = 0; i < amountColor; i++){  
+
+            for (int j = 0; j < playersCards; j++){
+
+                SDL_RenderCopy(renderer, texturesCard[i][j], NULL, &destRectsCard[i][j]);
+            }
+        } 
+                     
         SDL_RenderPresent(renderer);
     }
-       
+
+    for (int i = 0; i < amountColor; i++){
+
+        for (int j = 0; j < playersCards; j++){            
+            SDL_DestroyTexture(texturesCard[i][j]);
+        }
+    }   
+    SDL_DestroyTexture(texturePlaymat);   
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    getchar();
+    //getchar();
     return 0;
 }
