@@ -25,6 +25,8 @@
 
 typedef struct {
 
+    SDL_Texture* texture;
+    SDL_Rect destRect;
     int number;
     int color;
 
@@ -52,6 +54,12 @@ typedef struct {
 } gameDirector;
 
 void initCard(card* c) {
+
+    c->texture = NULL;
+    c->destRect.w = 0;
+    c->destRect.h = 0;
+    c->destRect.x = 0;
+    c->destRect.y = 0;
 
     c->number = 0;
     c->color = 0;     
@@ -160,6 +168,13 @@ void shuffleCards(card deck[totalCards]) {
         deck[i] = deck[j];
         deck[j] = temp;
     }
+    
+    for (int i = 0; i < totalCards; i++) {
+
+        card temp = deck[i];
+        deck[i] = temp;       
+    }
+    
 }
 
 void nextPlayer(gameDirector* gd) {
@@ -787,13 +802,7 @@ void initDeckTextures(SDL_Texture* textureCard[amountColor][playersCards], SDL_R
 
             sprintf(filePath, "C:\\belotte\\cards\\%dcard%d.png", i, j + 6);
             SDL_Surface* surfaceCard = IMG_Load(filePath);         
-            textureCard[i - 1][j - 1] = SDL_CreateTextureFromSurface(*renderer, surfaceCard);
-            if (textureCard[i - 1][j - 1] == NULL) {
-
-                printf("Unable to create texture from %s! SDL Error: %s\n", filePath, SDL_GetError());
-            }else {
-                printf("created texture from %s!", filePath);
-            }
+            textureCard[i - 1][j - 1] = SDL_CreateTextureFromSurface(*renderer, surfaceCard); 
             SDL_FreeSurface(surfaceCard);           
         }
     }
@@ -836,6 +845,15 @@ void initPlaymatTextureDestRect(SDL_Rect* destRectPlaymat, int windowWidth, int 
     destRectPlaymat->y = windowHeight/2 - destRectPlaymat->h/2;
 }
 
+Uint32 myCallbackFirst(Uint32 interval, void* param) {
+    SDL_TimerID* timer_id = (SDL_TimerID*)param;
+    
+    // Votre logique de timer ici...
+
+    SDL_RemoveTimer(*timer_id);
+    return 0;  
+}
+
 int SDL_main(int argc, char *argv[]) {
 
     printf("hello world!\n\n"); 
@@ -854,11 +872,13 @@ int SDL_main(int argc, char *argv[]) {
     
     gameDirector gd;
     initGameDirector(&gd);
-  
-    shuffleCards(gd.deck); 
-    /*
+
     gd.team = 2;
     gd.player = 1;
+
+    //shuffleCards(gd.deck); 
+    /*
+    //
 
     {
         printf("team: %d, player: %d\n\n", gd.team, gd.player);    
@@ -1046,7 +1066,8 @@ int SDL_main(int argc, char *argv[]) {
     */
        
     SDL_Texture* texturePlaymat;
-    initPlaymatTexture(&texturePlaymat, &renderer);    
+    initPlaymatTexture(&texturePlaymat, &renderer); 
+
     SDL_Rect destRectPlaymat;          
     initPlaymatTextureDestRect(&destRectPlaymat, windowWidth, windowHeight);
        
@@ -1056,12 +1077,25 @@ int SDL_main(int argc, char *argv[]) {
     SDL_Rect destRectsCard[amountColor][playersCards];
     initDeckTexturesDestRects(destRectsCard, windowWidth, windowHeight);
 
-    for (int i = 0; i < totalCards ; i++) {
-        texturesCard
-        if (gd.deck[i].color 
+    for (int i = 0, k = 0; i < amountColor; i++) {
+        for (int j = 0; j < playersCards; j++, k++) {
+            
+            gd.deck[k].texture = texturesCard[i][j];                       
+        }
     }
 
+    shuffleCards(gd.deck); 
 
+    for (int i = 0, k = 0; i < amountColor; i++) {
+        for (int j = 0; j < playersCards; j++, k++) {
+            
+            gd.deck[k].destRect = destRectsCard[i][j];            
+        }
+    }
+    
+    //SDL_Init(SDL_INIT_TIMER);    
+    //SDL_TimerID myTimer = SDL_AddTimer(5000, myCallback, &myTimer);
+   
     SDL_Event event;
     int quit = 0;    
     while (!quit) {
@@ -1085,27 +1119,36 @@ int SDL_main(int argc, char *argv[]) {
         }  
 
         SDL_RenderCopy(renderer, texturePlaymat, NULL, &destRectPlaymat);
+      
+        for (int i = 0; i < totalCards; i++) {
 
-        for (int i = 0; i < amountColor; i++){  
-
-            for (int j = 0; j < playersCards; j++){
-
-                SDL_RenderCopy(renderer, texturesCard[i][j], NULL, &destRectsCard[i][j]);
-            }
+            SDL_RenderCopy(renderer, gd.deck[i].texture, NULL,  &gd.deck[i].destRect);
         } 
-                     
+
+        SDL_Delay(2000);
+
+        firstDeal(&gd, teams);
+
+        for (int i = 0; i < totalCards; i++) {
+
+            SDL_RenderCopy(renderer, gd.deck[i].texture, NULL,  &gd.deck[i].destRect);
+        } 
+
+
+
+
+
+
+
         SDL_RenderPresent(renderer);
     }
-
-    for (int i = 0; i < amountColor; i++){
-
-        for (int j = 0; j < playersCards; j++){            
-            SDL_DestroyTexture(texturesCard[i][j]);
-        }
+   
+    for (int i = 0; i <totalCards; i++) {
+        SDL_DestroyTexture(gd.deck[i].texture);
     }   
     SDL_DestroyTexture(texturePlaymat);   
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    //getchar();
+    getchar();
     return 0;
 }
