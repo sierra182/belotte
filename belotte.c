@@ -785,31 +785,38 @@ void initDeckTextures(SDL_Texture* textureCard[amountColor][playersCards], SDL_R
         
         for (int j = 1; j <= playersCards; j++) {
 
-            sprintf(filePath, "C:\\belotte\\cards\\%dcard%d.png", i, j);
+            sprintf(filePath, "C:\\belotte\\cards\\%dcard%d.png", i, j + 6);
             SDL_Surface* surfaceCard = IMG_Load(filePath);         
             textureCard[i - 1][j - 1] = SDL_CreateTextureFromSurface(*renderer, surfaceCard);
+            if (textureCard[i - 1][j - 1] == NULL) {
+
+                printf("Unable to create texture from %s! SDL Error: %s\n", filePath, SDL_GetError());
+            }else {
+                printf("created texture from %s!", filePath);
+            }
             SDL_FreeSurface(surfaceCard);           
         }
     }
 }
 
-int decal = 0;
-void initDeckTextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight) {
+
+void initDeckTextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset) {
     
     destRectCard->w = .10 * windowHeight;
     destRectCard->h = .15 * windowHeight;
-    destRectCard->x = (windowWidth/2 - destRectCard->w/2) + decal;
+    destRectCard->x = (windowHeight * .2) + *offset;
     destRectCard->y = windowHeight/2 - destRectCard->h/2;
-    decal += 10;
+    *offset += 10;
 }
 
 void initDeckTexturesDestRects(SDL_Rect destRectsCard[amountColor][playersCards], int windowWidth, int windowHeight) {
 
-     for (int i = 0; i < amountColor; i++){  
+    int offset = 0;
+    for (int i = 0; i < amountColor; i++){  
 
         for (int j = 0; j < playersCards; j++){
 
-            initDeckTextureDestRect(&destRectsCard[i][j], windowWidth, windowHeight);
+            initDeckTextureDestRect(&destRectsCard[i][j], windowWidth, windowHeight, &offset);
         }
     }     
 }
@@ -1048,7 +1055,12 @@ int SDL_main(int argc, char *argv[]) {
 
     SDL_Rect destRectsCard[amountColor][playersCards];
     initDeckTexturesDestRects(destRectsCard, windowWidth, windowHeight);
-              
+
+    for (int i = 0; i < totalCards ; i++) {
+        texturesCard
+        if (gd.deck[i].color 
+    }
+
 
     SDL_Event event;
     int quit = 0;    
@@ -1067,7 +1079,8 @@ int SDL_main(int argc, char *argv[]) {
            
                 int newWidth = event.window.data1;
                 int newHeight = event.window.data2;
-                initPlaymatTextureDestRect(&destRectPlaymat, newWidth, newHeight);              
+                initPlaymatTextureDestRect(&destRectPlaymat, newWidth, newHeight); 
+                initDeckTexturesDestRects(destRectsCard, newWidth, newHeight);             
             }
         }  
 
