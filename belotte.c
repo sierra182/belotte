@@ -25,8 +25,7 @@
 
 typedef struct {
 
-    SDL_Texture* texture;
-    SDL_Rect destRect;
+    SDL_Texture* texture; 
     int number;
     int color;
 
@@ -34,9 +33,12 @@ typedef struct {
 
 typedef struct {
 
+    SDL_Rect tricksStackDestRect;
+    SDL_Rect playerHandDestRects[teamsPlayers][playersCards];
+
     card tricksStack[totalCards];
     card playerHand[teamsPlayers][playersCards];   
-
+        
     int score;
     int tricksStackIndex;
 
@@ -44,9 +46,12 @@ typedef struct {
 
 typedef struct {
 
+    SDL_Rect deckDestRect;
+    SDL_Rect trickDestRects[trickCards];    
+
     card deck[totalCards];
     card trick[trickCards];
-    card trump;
+    card trump;  
 
     int team;
     int player;  
@@ -55,12 +60,7 @@ typedef struct {
 
 void initCard(card* c) {
 
-    c->texture = NULL;
-    c->destRect.w = 0;
-    c->destRect.h = 0;
-    c->destRect.x = 0;
-    c->destRect.y = 0;
-
+    c->texture = NULL; 
     c->number = 0;
     c->color = 0;     
 }
@@ -118,6 +118,14 @@ void initTrick(card trick[trickCards]) {
     }
 }
 
+void initRect(SDL_Rect* rect) {
+
+    rect->w = 0;
+    rect->h = 0;
+    rect->x = 0;
+    rect->y = 0;
+} 
+
 void initTeams(team teams[amountTeams]) {
 
     for(int i = 0; i < amountTeams; i++) {
@@ -127,12 +135,14 @@ void initTeams(team teams[amountTeams]) {
             for(int k = 0; k < playersCards; k++) {
                 
                 initPlayerHand(&teams[i].playerHand[j][k]);
+                initRect(&teams[i].playerHandDestRects[j][k]);
             }
         }
-         
-        initTricksStack(teams[i].tricksStack);
+
+        initRect(&teams[i].tricksStackDestRect);
+        initTricksStack(teams[i].tricksStack);        
         teams[i].score = 0;
-        teams[i].tricksStackIndex = 0;
+        teams[i].tricksStackIndex = 0;               
     }     
 }
 
@@ -140,9 +150,16 @@ void initGameDirector(gameDirector* gd) {
    
     gd->player = 0;
     gd->team = 0;    
-    initTrick(gd->trick);
+    
     initDeck(gd->deck);  
-    initCard(&gd->trump); 
+    initCard(&gd->trump);  
+    initTrick(gd->trick);
+    initRect(&gd->deckDestRect);
+
+    for (int i = 0; i < totalCards; i++) {
+
+        initRect(&gd->trickDestRects[i]);
+    }
 }
 
 void initDivideByColorResult(card divideByColorResult[amountColor][playersCards]) {
@@ -253,8 +270,8 @@ void firstDeal(gameDirector* gd, team teams[amountTeams]) {
 
                 for (int l = 0; l < firstDealMaxCards1; l++, playerHandIndex = l,d++) {
                     
-                    teams[k].playerHand[j][l] = gd->deck[d];
-                    initCard(&gd->deck[d]);                    
+                    teams[k].playerHand[j][l] = gd->deck[d];                            
+                    initCard(&gd->deck[d]);                                          
                 }                           
             }
             t = 0;
@@ -281,7 +298,7 @@ void firstDeal(gameDirector* gd, team teams[amountTeams]) {
                 for (int l = playerHandIndex ; l < playersCards - playerHandIndex; l++, d++) {
                   
                     teams[k].playerHand[j][l] = gd->deck[d];
-                    initCard(&gd->deck[d]);
+                    initCard(&gd->deck[d]);                   
                 }                                         
             }
             t = 0;
@@ -808,7 +825,6 @@ void initDeckTextures(SDL_Texture* textureCard[amountColor][playersCards], SDL_R
     }
 }
 
-
 void initDeckTextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset) {
     
     destRectCard->w = .10 * windowHeight;
@@ -828,6 +844,105 @@ void initDeckTexturesDestRects(SDL_Rect destRectsCard[amountColor][playersCards]
             initDeckTextureDestRect(&destRectsCard[i][j], windowWidth, windowHeight, &offset);
         }
     }     
+}
+
+void getPositionFromCenter(int centerX, int centerY, int width, int height, int* x, int* y) {
+
+    *x = centerX - (width/2);
+    *y = centerY - (height/2);  
+}
+
+void initPlayerHand1TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset) {
+    
+    int x, y;
+    int primaryCenterX, primaryCenterY; 
+    primaryCenterX = 250;
+    primaryCenterY = 600;
+
+    int width = .10 * windowHeight;
+    int height = .15 * windowHeight;          
+    getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
+
+    destRectCard->w = width;
+    destRectCard->h = height;
+    destRectCard->x = x + *offset;
+    destRectCard->y = y;
+    *offset += 100;
+}
+
+void initPlayerHand2TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset, SDL_Point* rotationCenter) {
+    
+    int x, y;
+    int primaryCenterX, primaryCenterY; 
+    primaryCenterX = 100;
+    primaryCenterY = 10;
+
+    int width = .10 * windowHeight;
+    int height = .15 * windowHeight; 
+    int centerX = width /2;
+    int centerY = height /2;
+    rotationCenter->x = centerX ;
+    rotationCenter->y = centerY;       
+    getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
+
+    destRectCard->w = width;
+    destRectCard->h = height;
+    destRectCard->x = x;
+    destRectCard->y = y + *offset;
+    *offset += 100;
+}
+
+void initPlayerHand3TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset) {
+    
+    int x, y;
+    int primaryCenterX, primaryCenterY; 
+    primaryCenterX = 250;
+    primaryCenterY = 100;
+
+    int width = .10 * windowHeight;
+    int height = .15 * windowHeight;          
+    getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
+
+    destRectCard->w = width;
+    destRectCard->h = height;
+    destRectCard->x = x + *offset;
+    destRectCard->y = y;
+    *offset += 100;
+}
+
+void initPlayerHand4TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset, SDL_Point* rotationCenter) {
+    
+    int x, y;
+    int primaryCenterX, primaryCenterY; 
+    primaryCenterX = 1100;
+    primaryCenterY = 10;
+
+    int width = .10 * windowHeight;
+    int height = .15 * windowHeight; 
+    int centerX = width /2;
+    int centerY = height /2;
+    rotationCenter->x = centerX ;
+    rotationCenter->y = centerY;          
+    getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
+
+    destRectCard->w = width;
+    destRectCard->h = height;
+    destRectCard->x = x;
+    destRectCard->y = y + *offset;
+    *offset += 100;
+}
+
+void initPlayersHandsTexturesDestRects(SDL_Rect destRectsPlayerHand[players][playersCards], int windowWidth, int windowHeight, SDL_Point rotationCenters[teamsPlayers][playersCards]) {
+
+    int offset[players] = {0, 0, 0, 0};   
+        
+    for (int j = 0; j < playersCards; j++) {
+
+        initPlayerHand1TextureDestRect(&destRectsPlayerHand[0][j], windowWidth, windowHeight, &offset[0]);
+        initPlayerHand2TextureDestRect(&destRectsPlayerHand[1][j], windowWidth, windowHeight, &offset[1], &rotationCenters[0][j]);
+        initPlayerHand3TextureDestRect(&destRectsPlayerHand[2][j], windowWidth, windowHeight, &offset[2]);
+        initPlayerHand4TextureDestRect(&destRectsPlayerHand[3][j], windowWidth, windowHeight, &offset[3], &rotationCenters[1][j]);
+    }           
 }
 
 void initPlaymatTexture(SDL_Texture** texturePlaymat, SDL_Renderer** renderer) {
@@ -859,7 +974,7 @@ int SDL_main(int argc, char *argv[]) {
     printf("hello world!\n\n"); 
 
     const int windowWidth = 600;
-    const int windowHeight = 600;
+    const int windowHeight = 600;    
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
     
@@ -876,6 +991,7 @@ int SDL_main(int argc, char *argv[]) {
     gd.team = 2;
     gd.player = 1;
 
+    {
     //shuffleCards(gd.deck); 
     /*
     //
@@ -1064,7 +1180,8 @@ int SDL_main(int argc, char *argv[]) {
         }        
     }
     */
-       
+    }
+
     SDL_Texture* texturePlaymat;
     initPlaymatTexture(&texturePlaymat, &renderer); 
 
@@ -1078,24 +1195,90 @@ int SDL_main(int argc, char *argv[]) {
     initDeckTexturesDestRects(destRectsCard, windowWidth, windowHeight);
 
     for (int i = 0, k = 0; i < amountColor; i++) {
+
         for (int j = 0; j < playersCards; j++, k++) {
             
             gd.deck[k].texture = texturesCard[i][j];                       
         }
     }
 
-    shuffleCards(gd.deck); 
+     for (int i = 0, k = 0; i < amountColor; i++) {
 
-    for (int i = 0, k = 0; i < amountColor; i++) {
         for (int j = 0; j < playersCards; j++, k++) {
             
-            gd.deck[k].destRect = destRectsCard[i][j];            
+            gd.deckDestRect = destRectsCard[i][j];            
         }
     }
+
+    double angle = 90.0;
+    SDL_Point rotationCenters[teamsPlayers][playersCards];
+    SDL_Rect destRectsPlayersHands[players][playersCards];    
+    initPlayersHandsTexturesDestRects(destRectsPlayersHands, windowWidth, windowHeight, rotationCenters);   
+
+    for(int i = 0, l = 0; i < amountTeams; i++) {
+
+        for(int j = 0; j < teamsPlayers; j++, l++) {
+
+            for(int k = 0; k < playersCards; k++) {
+             
+                teams[i].playerHandDestRects[j][k] = destRectsPlayersHands[l][k];                
+            }
+        }
+    }     
+
+    shuffleCards(gd.deck); 
+      
+    SDL_RenderCopy(renderer, texturePlaymat, NULL, &destRectPlaymat);
+ 
+    for (int i = 0; i < totalCards; i++) {   
+
+        SDL_RenderCopy(renderer, gd.deck[i].texture, NULL,  &gd.deckDestRect);                   
+    }
+
+    SDL_RenderPresent(renderer);
     
     //SDL_Init(SDL_INIT_TIMER);    
     //SDL_TimerID myTimer = SDL_AddTimer(5000, myCallback, &myTimer);
-   
+    SDL_Delay(2000);
+        
+    firstDeal(&gd, teams);
+  
+    for (int i = 0; i < totalCards; i++) {
+        
+        SDL_RenderCopy(renderer, gd.deck[i].texture, NULL,  &gd.deckDestRect);      
+    }         
+    
+    SDL_RenderPresent(renderer);
+    SDL_Delay(2000);
+    int trumpPlayer[2] = {0, 0}; 
+
+    secondDeal(&gd, teams, trumpPlayer);  
+sortAllPlayersHands(gd, teams); 
+    for (int i = 0; i < totalCards; i++) {
+
+        SDL_RenderCopy(renderer, gd.deck[i].texture, NULL,  &gd.deckDestRect);        
+    } 
+
+    for(int h = 0; h < amountTeams; h++) {
+
+        for (int i = 0; i < teamsPlayers; i++) {
+            
+            for (int j = 0; j < playersCards; j++) {
+
+                if (i == 1) {
+
+                    SDL_RenderCopyEx(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j], angle, &rotationCenters[i][j], SDL_FLIP_NONE); 
+                }
+                else {                   
+                    SDL_RenderCopy(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j]);   
+                }
+            }
+        }
+    }
+
+    SDL_RenderPresent(renderer);
+    SDL_Delay(2000);
+
     SDL_Event event;
     int quit = 0;    
     while (!quit) {
@@ -1119,28 +1302,30 @@ int SDL_main(int argc, char *argv[]) {
         }  
 
         SDL_RenderCopy(renderer, texturePlaymat, NULL, &destRectPlaymat);
-      
+        
         for (int i = 0; i < totalCards; i++) {
 
-            SDL_RenderCopy(renderer, gd.deck[i].texture, NULL,  &gd.deck[i].destRect);
-        } 
+            SDL_RenderCopy(renderer, gd.deck[i].texture, NULL,  &gd.deckDestRect);        
+        }
 
-        SDL_Delay(2000);
+       for(int h = 0; h < amountTeams; h++) {
 
-        firstDeal(&gd, teams);
+        for (int i = 0; i < teamsPlayers; i++) {
+            
+            for (int j = 0; j < playersCards; j++) {
 
-        for (int i = 0; i < totalCards; i++) {
+                if (i == 1) {
 
-            SDL_RenderCopy(renderer, gd.deck[i].texture, NULL,  &gd.deck[i].destRect);
-        } 
+                   SDL_RenderCopyEx(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j], angle, &rotationCenters[i][j], SDL_FLIP_NONE); 
+                }
+                else {                   
+                    SDL_RenderCopy(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j]);   
+                }
+            }
+        }
+    }    
 
-
-
-
-
-
-
-        SDL_RenderPresent(renderer);
+        SDL_RenderPresent(renderer);         
     }
    
     for (int i = 0; i <totalCards; i++) {
@@ -1148,7 +1333,7 @@ int SDL_main(int argc, char *argv[]) {
     }   
     SDL_DestroyTexture(texturePlaymat);   
     SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    getchar();
+    SDL_DestroyWindow(window); 
+    SDL_Quit();     
     return 0;
 }
