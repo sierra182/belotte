@@ -146,6 +146,14 @@ void initTeams(team teams[amountTeams]) {
     }     
 }
 
+void initTrickDestRects(gameDirector** gd) {
+
+    for (int i = 0; i < trickCards; i++) {
+
+        initRect(&(*gd)->trickDestRects[i]);
+    }
+}
+
 void initGameDirector(gameDirector* gd) {
    
     gd->player = 0;
@@ -155,11 +163,7 @@ void initGameDirector(gameDirector* gd) {
     initCard(&gd->trump);  
     initTrick(gd->trick);
     initRect(&gd->deckDestRect);
-
-    for (int i = 0; i < totalCards; i++) {
-
-        initRect(&gd->trickDestRects[i]);
-    }
+    initTrickDestRects(&gd);  
 }
 
 void initDivideByColorResult(card divideByColorResult[amountColor][playersCards]) {
@@ -867,15 +871,15 @@ void initPlayerHand1TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int
     destRectCard->h = height;
     destRectCard->x = x + *offset;
     destRectCard->y = y;
-    *offset += 100;
+    *offset += 70;
 }
 
 void initPlayerHand2TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset, SDL_Point* rotationCenter) {
-    
+    printf("start in hand2");
     int x, y;
     int primaryCenterX, primaryCenterY; 
-    primaryCenterX = 100;
-    primaryCenterY = 10;
+    primaryCenterX = .15 * windowHeight; 
+    primaryCenterY = .08 * windowHeight;
 
     int width = .10 * windowHeight;
     int height = .15 * windowHeight; 
@@ -889,7 +893,7 @@ void initPlayerHand2TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int
     destRectCard->h = height;
     destRectCard->x = x;
     destRectCard->y = y + *offset;
-    *offset += 100;
+    *offset +=  .12 * windowHeight;printf("end in hand2");
 }
 
 void initPlayerHand3TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset) {
@@ -907,7 +911,7 @@ void initPlayerHand3TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int
     destRectCard->h = height;
     destRectCard->x = x + *offset;
     destRectCard->y = y;
-    *offset += 100;
+    *offset += 70;
 }
 
 void initPlayerHand4TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset, SDL_Point* rotationCenter) {
@@ -915,7 +919,7 @@ void initPlayerHand4TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int
     int x, y;
     int primaryCenterX, primaryCenterY; 
     primaryCenterX = 1100;
-    primaryCenterY = 10;
+    primaryCenterY = 100;
 
     int width = .10 * windowHeight;
     int height = .15 * windowHeight; 
@@ -929,19 +933,31 @@ void initPlayerHand4TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int
     destRectCard->h = height;
     destRectCard->x = x;
     destRectCard->y = y + *offset;
-    *offset += 100;
+    *offset += 70;
 }
 
-void initPlayersHandsTexturesDestRects(SDL_Rect destRectsPlayerHand[players][playersCards], int windowWidth, int windowHeight, SDL_Point rotationCenters[teamsPlayers][playersCards]) {
+void initPlayersHandsTexturesDestRects( team teams[amountTeams], SDL_Rect destRectsPlayerHand[players][playersCards], int windowWidth, int windowHeight, SDL_Point rotationCenters[teamsPlayers][playersCards]) {
 
     int offset[players] = {0, 0, 0, 0};   
         
     for (int j = 0; j < playersCards; j++) {
 
-        initPlayerHand1TextureDestRect(&destRectsPlayerHand[0][j], windowWidth, windowHeight, &offset[0]);
-        initPlayerHand2TextureDestRect(&destRectsPlayerHand[1][j], windowWidth, windowHeight, &offset[1], &rotationCenters[0][j]);
-        initPlayerHand3TextureDestRect(&destRectsPlayerHand[2][j], windowWidth, windowHeight, &offset[2]);
-        initPlayerHand4TextureDestRect(&destRectsPlayerHand[3][j], windowWidth, windowHeight, &offset[3], &rotationCenters[1][j]);
+        //if(teams[0].playerHand[0][j].number != 0) {
+        printf("joueur1");
+            initPlayerHand1TextureDestRect(&destRectsPlayerHand[0][j], windowWidth, windowHeight, &offset[0]);
+       //}
+       // if(teams[1].playerHand[0][j].number != 0) {
+        printf("joueur2");
+            initPlayerHand2TextureDestRect(&destRectsPlayerHand[1][j], windowWidth, windowHeight, &offset[1], &rotationCenters[0][j]);
+    //    } 
+      //  if(teams[0].playerHand[1][j].number != 0) {
+        printf("joueur3");
+            initPlayerHand3TextureDestRect(&destRectsPlayerHand[2][j], windowWidth, windowHeight, &offset[2]);
+     //   } 
+     //   if(teams[1].playerHand[1][j].number != 0) {
+         printf("joueur4");
+            initPlayerHand4TextureDestRect(&destRectsPlayerHand[3][j], windowWidth, windowHeight, &offset[3], &rotationCenters[1][j]);
+    //    }           
     }           
 }
 
@@ -958,6 +974,20 @@ void initPlaymatTextureDestRect(SDL_Rect* destRectPlaymat, int windowWidth, int 
     destRectPlaymat->h = .8 * windowHeight;
     destRectPlaymat->x = windowWidth/2 - destRectPlaymat->w/2;
     destRectPlaymat->y = windowHeight/2 - destRectPlaymat->h/2;
+}
+
+void  addDestRectsPlayersHandsToTeams(SDL_Rect destRectsPlayersHands[players][playersCards], team teams[amountTeams]) {
+    
+    for(int i = 0, l = 0; i < amountTeams; i++) {
+
+        for(int j = 0; j < teamsPlayers; j++, l++) {
+
+            for(int k = 0; k < playersCards; k++) {
+             
+                teams[i].playerHandDestRects[j][k] = destRectsPlayersHands[l][k];                
+            }
+        }
+    }  
 }
 
 Uint32 myCallbackFirst(Uint32 interval, void* param) {
@@ -1202,30 +1232,14 @@ int SDL_main(int argc, char *argv[]) {
         }
     }
 
-     for (int i = 0, k = 0; i < amountColor; i++) {
+    for (int i = 0, k = 0; i < amountColor; i++) {
 
         for (int j = 0; j < playersCards; j++, k++) {
             
             gd.deckDestRect = destRectsCard[i][j];            
         }
-    }
-
-    double angle = 90.0;
-    SDL_Point rotationCenters[teamsPlayers][playersCards];
-    SDL_Rect destRectsPlayersHands[players][playersCards];    
-    initPlayersHandsTexturesDestRects(destRectsPlayersHands, windowWidth, windowHeight, rotationCenters);   
-
-    for(int i = 0, l = 0; i < amountTeams; i++) {
-
-        for(int j = 0; j < teamsPlayers; j++, l++) {
-
-            for(int k = 0; k < playersCards; k++) {
-             
-                teams[i].playerHandDestRects[j][k] = destRectsPlayersHands[l][k];                
-            }
-        }
-    }     
-
+    } 
+      
     shuffleCards(gd.deck); 
       
     SDL_RenderCopy(renderer, texturePlaymat, NULL, &destRectPlaymat);
@@ -1240,23 +1254,118 @@ int SDL_main(int argc, char *argv[]) {
     //SDL_Init(SDL_INIT_TIMER);    
     //SDL_TimerID myTimer = SDL_AddTimer(5000, myCallback, &myTimer);
     SDL_Delay(2000);
-        
+           {   
+        for (int i = 0; i < totalCards; i++) {
+            printf("*%d \"%d:%d\" ",i,  gd.deck[i].color, gd.deck[i].number);
+        }         
+        printf("\n\nplayer1: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[0].playerHand[0][i].color, teams[0].playerHand[0][i].number);
+        }        
+        printf("\nplayer2: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[1].playerHand[0][i].color, teams[1].playerHand[0][i].number);
+        }        
+        printf("\nplayer3: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[0].playerHand[1][i].color, teams[0].playerHand[1][i].number);
+        }        
+        printf("\nplayer4: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[1].playerHand[1][i].color, teams[1].playerHand[1][i].number);
+        }  
+    }    
     firstDeal(&gd, teams);
   
     for (int i = 0; i < totalCards; i++) {
         
         SDL_RenderCopy(renderer, gd.deck[i].texture, NULL,  &gd.deckDestRect);      
-    }         
-    
+    }  
+    {   
+        for (int i = 0; i < totalCards; i++) {
+            printf("*%d \"%d:%d\" ",i,  gd.deck[i].color, gd.deck[i].number);
+        }         
+        printf("\n\nplayer1: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[0].playerHand[0][i].color, teams[0].playerHand[0][i].number);
+        }        
+        printf("\nplayer2: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[1].playerHand[0][i].color, teams[1].playerHand[0][i].number);
+        }        
+        printf("\nplayer3: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[0].playerHand[1][i].color, teams[0].playerHand[1][i].number);
+        }        
+        printf("\nplayer4: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[1].playerHand[1][i].color, teams[1].playerHand[1][i].number);
+        }  
+    }   
+
+    double angle = 90.0;
+    SDL_Point rotationCenters[teamsPlayers][playersCards];
+    SDL_Rect destRectsPlayersHands[players][playersCards];    
+    initPlayersHandsTexturesDestRects(teams, destRectsPlayersHands, windowWidth, windowHeight, rotationCenters);   
+    addDestRectsPlayersHandsToTeams(destRectsPlayersHands, teams);
+
+    for(int h = 0; h < amountTeams; h++) {
+
+        for (int i = 0; i < teamsPlayers; i++) {
+            
+            for (int j = 0; j < playersCards; j++) {
+               
+                if (teams[h].playerHand[i][j].color != 0) {
+                    
+                    if (i == 1) {
+
+                        SDL_RenderCopyEx(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j], angle, &rotationCenters[i][j], SDL_FLIP_NONE); 
+                    }
+                    else {                   
+                        SDL_RenderCopy(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j]);   
+                    }
+                }
+            }
+        }
+    }  
+  
     SDL_RenderPresent(renderer);
+
     SDL_Delay(2000);
-    int trumpPlayer[2] = {0, 0}; 
 
-    secondDeal(&gd, teams, trumpPlayer);  
-sortAllPlayersHands(gd, teams); 
-    for (int i = 0; i < totalCards; i++) {
+    int trumpPlayer[2] = {0, 2}; 
+    modifyTrump(&gd);
+    addCardToPlayerHand(teams[0].playerHand[0], playersCards - 1,  gd.deck, 20);
 
-        SDL_RenderCopy(renderer, gd.deck[i].texture, NULL,  &gd.deckDestRect);        
+    secondDeal(&gd, teams, trumpPlayer); 
+
+    {
+        printf("\nAtout: %d, %d", gd.trump.color, gd.trump.number);
+    }
+    {
+        printf("\n\nnow secondDeal\n\n"); 
+    }   
+
+    {   
+        for (int i = 0; i < totalCards; i++) {
+            printf("*%d \"%d:%d\" ",i,  gd.deck[i].color, gd.deck[i].number);
+        }         
+        printf("\n\nplayer1: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[0].playerHand[0][i].color, teams[0].playerHand[0][i].number);
+        }        
+        printf("\nplayer2: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[1].playerHand[0][i].color, teams[1].playerHand[0][i].number);
+        }        
+        printf("\nplayer3: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[0].playerHand[1][i].color, teams[0].playerHand[1][i].number);
+        }        
+        printf("\nplayer4: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[1].playerHand[1][i].color, teams[1].playerHand[1][i].number);
+        }  
     } 
 
     for(int h = 0; h < amountTeams; h++) {
@@ -1264,17 +1373,86 @@ sortAllPlayersHands(gd, teams);
         for (int i = 0; i < teamsPlayers; i++) {
             
             for (int j = 0; j < playersCards; j++) {
+               
+                if (teams[h].playerHand[i][j].color != 0) {
+                    
+                    if (i == 1) {
 
-                if (i == 1) {
-
-                    SDL_RenderCopyEx(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j], angle, &rotationCenters[i][j], SDL_FLIP_NONE); 
-                }
-                else {                   
-                    SDL_RenderCopy(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j]);   
+                        SDL_RenderCopyEx(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j], angle, &rotationCenters[i][j], SDL_FLIP_NONE); 
+                    }
+                    else {                   
+                        SDL_RenderCopy(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j]);   
+                    }
                 }
             }
         }
     }
+
+    SDL_RenderPresent(renderer);
+    SDL_Delay(2000);
+
+    sortAllPlayersHands(gd, teams); 
+
+    for (int i = 0; i < totalCards / trickCards; i++) {    
+          
+        for (int i = 0; i < totalCards; i++) {
+            printf("*%d \"%d:%d\" ",i,  gd.deck[i].color, gd.deck[i].number);
+        }         
+        printf("\n\nplayer1: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[0].playerHand[0][i].color, teams[0].playerHand[0][i].number);
+        }        
+        printf("\nplayer2: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[1].playerHand[0][i].color, teams[1].playerHand[0][i].number);
+        }        
+        printf("\nplayer3: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[0].playerHand[1][i].color, teams[0].playerHand[1][i].number);
+        }        
+        printf("\nplayer4: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[1].playerHand[1][i].color, teams[1].playerHand[1][i].number);
+        }  
+    }
+    {   
+        printf("\n\ntrick:\n");
+        for (int i = 0; i < trickCards; i++) {
+            printf("i:%d, \"%d:%d\" - ", i, gd.trick[i].color, gd.trick[i].number);
+        }
+    }
+    {
+        printf("\n\nnow play\n\n"); 
+    }
+    {
+        printf("team: %d, player: %d\n\n", gd.team, gd.player);    
+    }
+  
+    for(int h = 0; h < amountTeams; h++) {
+
+        for (int i = 0; i < teamsPlayers; i++) {
+            
+            for (int j = 0; j < playersCards; j++) {
+               
+                if (teams[h].playerHand[i][j].color != 0) {
+                    
+                    if (i == 1) {
+
+                        SDL_RenderCopyEx(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j], angle, &rotationCenters[i][j], SDL_FLIP_NONE); 
+                    }
+                    else {                   
+                        SDL_RenderCopy(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j]);   
+                    }
+                }
+            }
+        }
+    }
+
+
+
+
+
+
 
     SDL_RenderPresent(renderer);
     SDL_Delay(2000);
@@ -1297,7 +1475,10 @@ sortAllPlayersHands(gd, teams);
                 int newWidth = event.window.data1;
                 int newHeight = event.window.data2;
                 initPlaymatTextureDestRect(&destRectPlaymat, newWidth, newHeight); 
-                initDeckTexturesDestRects(destRectsCard, newWidth, newHeight);             
+                initDeckTexturesDestRects(destRectsCard, newWidth, newHeight);
+             
+                initPlayersHandsTexturesDestRects(teams, destRectsPlayersHands, newWidth, newHeight, rotationCenters);   
+                addDestRectsPlayersHandsToTeams(destRectsPlayersHands, teams);  
             }
         }  
 
@@ -1308,22 +1489,25 @@ sortAllPlayersHands(gd, teams);
             SDL_RenderCopy(renderer, gd.deck[i].texture, NULL,  &gd.deckDestRect);        
         }
 
-       for(int h = 0; h < amountTeams; h++) {
+        for(int h = 0; h < amountTeams; h++) {
 
-        for (int i = 0; i < teamsPlayers; i++) {
+            for (int i = 0; i < teamsPlayers; i++) {
             
-            for (int j = 0; j < playersCards; j++) {
+                for (int j = 0; j < playersCards; j++) {
+               
+                    if (teams[h].playerHand[i][j].color != 0) {
+                    
+                        if (i == 1) {
 
-                if (i == 1) {
-
-                   SDL_RenderCopyEx(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j], angle, &rotationCenters[i][j], SDL_FLIP_NONE); 
-                }
-                else {                   
-                    SDL_RenderCopy(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j]);   
+                            SDL_RenderCopyEx(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j], angle, &rotationCenters[i][j], SDL_FLIP_NONE); 
+                        }
+                        else {                   
+                            SDL_RenderCopy(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j]);   
+                        }
+                    }
                 }
             }
-        }
-    }    
+        }  
 
         SDL_RenderPresent(renderer);         
     }
@@ -1334,6 +1518,6 @@ sortAllPlayersHands(gd, teams);
     SDL_DestroyTexture(texturePlaymat);   
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window); 
-    SDL_Quit();     
+    SDL_Quit();       
     return 0;
 }
