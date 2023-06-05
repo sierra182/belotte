@@ -830,31 +830,39 @@ void initDeckTextures(SDL_Texture* textureCard[amountColor][playersCards], SDL_R
     }
 }
 
-void initDeckTextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset) {
-    
-    destRectCard->w = .10 * windowHeight;
-    destRectCard->h = .15 * windowHeight;
-    destRectCard->x = (windowHeight * .2) + *offset;
-    destRectCard->y = windowHeight/2 - destRectCard->h/2;
-    *offset += 10;
-}
-
-void initDeckTexturesDestRects(SDL_Rect destRectsCard[amountColor][playersCards], int windowWidth, int windowHeight) {
-
-    int offset = 0;
-    for (int i = 0; i < amountColor; i++){  
-
-        for (int j = 0; j < playersCards; j++){
-
-            initDeckTextureDestRect(&destRectsCard[i][j], windowWidth, windowHeight, &offset);
-        }
-    }     
-}
-
 void getPositionFromCenter(int centerX, int centerY, int width, int height, double* x, double* y) {
 
     *x = centerX - (width/2.0);
     *y = centerY - (height/2.0);  
+}
+
+void initDeckTextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight) {
+
+    double x, y;
+    int width, height;
+    int primaryCenterX, primaryCenterY;
+
+    width = .08 * windowHeight;
+    height = 3 * width / 2;
+    primaryCenterX = windowWidth / 2;
+    primaryCenterY = windowHeight / 2;
+    getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
+
+    destRectCard->w = width;
+    destRectCard->h = height; 
+    destRectCard->x = x;
+    destRectCard->y = y;    
+}
+
+void initDeckTexturesDestRects(SDL_Rect destRectsCard[amountColor][playersCards], int windowWidth, int windowHeight) {
+    
+    for (int i = 0; i < amountColor; i++){  
+
+        for (int j = 0; j < playersCards; j++){
+
+            initDeckTextureDestRect(&destRectsCard[i][j], windowWidth, windowHeight);
+        }
+    }     
 }
 
 void initPlayerHand1TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, double* offset) {
@@ -955,26 +963,64 @@ void initPlayerHand4TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int
 void initPlayersHandsTexturesDestRects(team teams[amountTeams], SDL_Rect destRectsPlayerHand[players][playersCards], int windowWidth, int windowHeight, SDL_Point rotationCenters[teamsPlayers][playersCards]) {
 
     double offset[players] = {0, 0, 0, 0};   
-       // printf("\n\n\nYYYYYEEEEEEE DEBUT");
+       
     for (int j = 0; j < playersCards; j++) {
 
         if(teams[0].playerHand[0][j].number != 0) {
-        printf("joueur1");
+      
             initPlayerHand1TextureDestRect(&destRectsPlayerHand[0][j], windowWidth, windowHeight, &offset[0]);
         }
         if(teams[1].playerHand[0][j].number != 0) {
-        printf("joueur2");
+     
             initPlayerHand2TextureDestRect(&destRectsPlayerHand[1][j], windowWidth, windowHeight, &offset[1], &rotationCenters[0][j]);
         } 
         if(teams[0].playerHand[1][j].number != 0) {
-        printf("joueur3");
+     
             initPlayerHand3TextureDestRect(&destRectsPlayerHand[2][j], windowWidth, windowHeight, &offset[2]);
         } 
         if(teams[1].playerHand[1][j].number != 0) {
-         printf("joueur4");
+        
             initPlayerHand4TextureDestRect(&destRectsPlayerHand[3][j], windowWidth, windowHeight, &offset[3], &rotationCenters[1][j]);
         }           
     }           
+}
+
+void initTrickTextureDestRect(SDL_Rect* destRectTrick, int windowWidth, int windowHeight, double* offset) {
+
+    double x, y;
+    int primaryCenterX, primaryCenterY;
+    int width = .08 * windowHeight;
+    int height = 3 * width / 2;
+    int widthTrickContainer = .7 * windowHeight /2;
+    double cardSpace = widthTrickContainer / 4.0 / 2.0;
+    primaryCenterY = windowHeight / 2;
+    primaryCenterX = (windowWidth / 2) - (widthTrickContainer / 2) + cardSpace;
+    
+    getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);
+
+    destRectTrick->w = width;
+    destRectTrick->h = height;
+    destRectTrick->x = x + *offset;
+    destRectTrick->y = y;
+    *offset += 2 * cardSpace;
+}
+
+void initTrickTexturesDestRects(SDL_Rect destRectsTrick[trickCards], int windowWidth, int windowHeight) {
+
+    double offset = 0.0;
+
+    for (int i = 0; i < trickCards ; i++) {
+
+        initTrickTextureDestRect(&destRectsTrick[i], windowWidth, windowHeight, &offset);
+    }
+}
+
+void addTrickToGameDirector(SDL_Rect destRectsTrick[trickCards], gameDirector* gd) {
+
+    for(int i = 0; i < trickCards; i++) { 
+
+        gd->trickDestRects[i] = destRectsTrick[i];
+    }
 }
 
 void initPlaymatTexture(SDL_Texture** texturePlaymat, SDL_Renderer** renderer) {
@@ -1248,15 +1294,17 @@ int SDL_main(int argc, char *argv[]) {
         }
     }
 
-    for (int i = 0, k = 0; i < amountColor; i++) {
+    for (int i = 0; i < amountColor; i++) {
 
-        for (int j = 0; j < playersCards; j++, k++) {
+        for (int j = 0; j < playersCards; j++) {
             
             gd.deckDestRect = destRectsCard[i][j];            
         }
     } 
 
-    //SDL_Rect destRectsTrick[trickCards]
+    SDL_Rect destRectsTrick[trickCards];
+    initTrickTexturesDestRects(destRectsTrick, windowWidth, windowHeight);
+    addTrickToGameDirector(destRectsTrick, &gd);
 
     shuffleCards(gd.deck); 
       
@@ -1468,6 +1516,55 @@ int SDL_main(int argc, char *argv[]) {
         }
     }
 
+    {   
+            printf("\n\ntrick:\n");
+            for (int i = 0; i < trickCards; i++) {
+                printf("i:%d, \"%d:%d\" - ", i, gd.trick[i].color, gd.trick[i].number);
+            }
+        }
+        {
+            printf("\n\nnow play\n\n"); 
+        }
+        {
+            printf("team: %d, player: %d\n\n", gd.team, gd.player);    
+        }
+        
+        play(&gd, teams);
+
+        {
+            printf("A :team: %d, player: %d\n\n", gd.team, gd.player);    
+        }    
+        {   
+        for (int i = 0; i < totalCards; i++) {
+            printf("*%d \"%d:%d\" ",i,  gd.deck[i].color, gd.deck[i].number);
+        }         
+        printf("\n\nplayer1: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[0].playerHand[0][i].color, teams[0].playerHand[0][i].number);
+        }        
+        printf("\nplayer2: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[1].playerHand[0][i].color, teams[1].playerHand[0][i].number);
+        }        
+        printf("\nplayer3: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[0].playerHand[1][i].color, teams[0].playerHand[1][i].number);
+        }        
+        printf("\nplayer4: ");
+        for (int i = 0; i < playersCards; i++) {        
+            printf("\"%d:%d\" - ", teams[1].playerHand[1][i].color, teams[1].playerHand[1][i].number);
+        }  
+    }  
+        {   
+            printf("\n\ntrick:\n");
+            for (int i = 0; i < trickCards; i++) {
+                printf("i:%d, \"%d:%d\" - ", i, gd.trick[i].color, gd.trick[i].number);
+            }
+        }
+
+
+
+
     SDL_RenderPresent(renderer);
     SDL_Delay(2000);
 
@@ -1488,11 +1585,15 @@ int SDL_main(int argc, char *argv[]) {
            
                 int newWidth = event.window.data1;
                 int newHeight = event.window.data2;
+
                 initPlaymatTextureDestRect(&destRectPlaymat, newWidth, newHeight); 
                 initDeckTexturesDestRects(destRectsCard, newWidth, newHeight);
              
                 initPlayersHandsTexturesDestRects(teams, destRectsPlayersHands, newWidth, newHeight, rotationCenters);                  
-                addDestRectsPlayersHandsToTeams(destRectsPlayersHands, teams);  
+                addDestRectsPlayersHandsToTeams(destRectsPlayersHands, teams); 
+
+                initTrickTexturesDestRects(destRectsTrick, newWidth, newHeight);
+                addTrickToGameDirector(destRectsTrick, &gd); 
             }
         }  
 
@@ -1521,6 +1622,14 @@ int SDL_main(int argc, char *argv[]) {
                 }
             }
         }  
+
+        for(int i = 0; i < trickCards; i++) { 
+
+            if(gd.trick[i].color != 0) {
+
+                SDL_RenderCopy(renderer, gd.trick[i].texture, NULL, &gd.trickDestRects[i]);
+            }               
+        }
 
         SDL_RenderPresent(renderer);         
     }
