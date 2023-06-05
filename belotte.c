@@ -3,6 +3,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
 #include <time.h>
+#include <math.h>
 
 #define amountTeams 2
 #define teamsPlayers 2
@@ -850,114 +851,129 @@ void initDeckTexturesDestRects(SDL_Rect destRectsCard[amountColor][playersCards]
     }     
 }
 
-void getPositionFromCenter(int centerX, int centerY, int width, int height, int* x, int* y) {
+void getPositionFromCenter(int centerX, int centerY, int width, int height, double* x, double* y) {
 
-    *x = centerX - (width/2);
-    *y = centerY - (height/2);  
+    *x = centerX - (width/2.0);
+    *y = centerY - (height/2.0);  
 }
 
-void initPlayerHand1TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset) {
+void initPlayerHand1TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, double* offset) {
     
-    int x, y;
+    double x, y;
     int primaryCenterX, primaryCenterY; 
-    primaryCenterX = 250;
-    primaryCenterY = 600;
+    
+    double cardSpace = (.7 * windowHeight) / 8.0 / 2.0;
+    double matStart = ((windowWidth / 2.0) - ((.7 * windowHeight) / 2.0));
+    primaryCenterX =(int) matStart + cardSpace;
 
-    int width = .10 * windowHeight;
-    int height = .15 * windowHeight;          
+    int width = .08 * windowHeight;
+    int height = 3 * width / 2; 
+    primaryCenterY = (windowHeight / 2) + ((windowHeight *.7) / 2) + (height / 2) + (.01 * windowHeight);         
     getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
 
     destRectCard->w = width;
     destRectCard->h = height;
-    destRectCard->x = x + *offset;
+    destRectCard->x = x + (int) *offset;
     destRectCard->y = y;
-    *offset += 70;
+    *offset += 2 * cardSpace;
 }
 
-void initPlayerHand2TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset, SDL_Point* rotationCenter) {
-    printf("start in hand2");
-    int x, y;
-    int primaryCenterX, primaryCenterY; 
-    primaryCenterX = .15 * windowHeight; 
-    primaryCenterY = .08 * windowHeight;
+void initPlayerHand2TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, double* offset, SDL_Point* rotationCenter) {
+    
+    double x, y;
+    int primaryCenterX, primaryCenterY;    
 
-    int width = .10 * windowHeight;
-    int height = .15 * windowHeight; 
-    int centerX = width /2;
-    int centerY = height /2;
+    int width = .08 * windowHeight;
+    int height = 3 * width / 2;
+
+    primaryCenterX = (windowWidth / 2) - ((windowHeight *.7) / 2) - (height / 2) - (.01 * windowHeight);
+    double cardSpace = (.7 * windowHeight) / 8.0 / 2.0;
+    double matStart = ((windowHeight / 2.0) - ((.7 * windowHeight) / 2.0));
+   
+    primaryCenterY =(int) matStart + cardSpace;
+    int centerX = width / 2;
+    int centerY = height / 2; 
     rotationCenter->x = centerX ;
-    rotationCenter->y = centerY;       
+    rotationCenter->y = centerY;     
     getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
-
+ 
     destRectCard->w = width;
     destRectCard->h = height;
     destRectCard->x = x;
     destRectCard->y = y + *offset;
-    *offset +=  .12 * windowHeight;printf("end in hand2");
+    *offset += 2 * cardSpace;
 }
 
-void initPlayerHand3TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset) {
+void initPlayerHand3TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, double* offset) {
     
-    int x, y;
-    int primaryCenterX, primaryCenterY; 
-    primaryCenterX = 250;
-    primaryCenterY = 100;
+    double x, y;
+    int primaryCenterX, primaryCenterY;    
 
-    int width = .10 * windowHeight;
-    int height = .15 * windowHeight;          
+    double cardSpace = (.7 * windowHeight) / 8.0 / 2.0;
+    double matStart = ((windowWidth / 2.0) - ((.7 * windowHeight) / 2.0));
+    primaryCenterX =(int) matStart + cardSpace;
+
+    int width = .08 * windowHeight;
+    int height = 3 * width / 2;
+    primaryCenterY = (windowHeight / 2) - ((windowHeight *.7) / 2) - (height / 2) - (.01 * windowHeight);           
     getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
 
     destRectCard->w = width;
     destRectCard->h = height;
-    destRectCard->x = x + *offset;
+    destRectCard->x = x + (int) *offset;
     destRectCard->y = y;
-    *offset += 70;
+    *offset += 2 * cardSpace;
 }
 
-void initPlayerHand4TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, int* offset, SDL_Point* rotationCenter) {
+void initPlayerHand4TextureDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, double* offset, SDL_Point* rotationCenter) {
     
-    int x, y;
+    double x, y;
     int primaryCenterX, primaryCenterY; 
-    primaryCenterX = 1100;
-    primaryCenterY = 100;
+ 
+    int width = .08 * windowHeight;
+    int height = 3 * width / 2;
 
-    int width = .10 * windowHeight;
-    int height = .15 * windowHeight; 
-    int centerX = width /2;
-    int centerY = height /2;
+    double cardSpace = (.7 * windowHeight) / 8.0 / 2.0;
+    double matStart = ((windowHeight / 2.0) - ((.7 * windowHeight) / 2.0));
+   
+    primaryCenterY =(int) matStart + cardSpace;
+    primaryCenterX = (windowWidth / 2) + ((windowHeight *.7) / 2) + (height / 2) + (.01 * windowHeight);
+
+    int centerX = width / 2;
+    int centerY = height / 2; 
     rotationCenter->x = centerX ;
-    rotationCenter->y = centerY;          
+    rotationCenter->y = centerY;     
     getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
-
+ 
     destRectCard->w = width;
     destRectCard->h = height;
     destRectCard->x = x;
     destRectCard->y = y + *offset;
-    *offset += 70;
+    *offset += 2 * cardSpace;
 }
 
-void initPlayersHandsTexturesDestRects( team teams[amountTeams], SDL_Rect destRectsPlayerHand[players][playersCards], int windowWidth, int windowHeight, SDL_Point rotationCenters[teamsPlayers][playersCards]) {
+void initPlayersHandsTexturesDestRects(team teams[amountTeams], SDL_Rect destRectsPlayerHand[players][playersCards], int windowWidth, int windowHeight, SDL_Point rotationCenters[teamsPlayers][playersCards]) {
 
-    int offset[players] = {0, 0, 0, 0};   
-        
+    double offset[players] = {0, 0, 0, 0};   
+       // printf("\n\n\nYYYYYEEEEEEE DEBUT");
     for (int j = 0; j < playersCards; j++) {
 
-        //if(teams[0].playerHand[0][j].number != 0) {
+        if(teams[0].playerHand[0][j].number != 0) {
         printf("joueur1");
             initPlayerHand1TextureDestRect(&destRectsPlayerHand[0][j], windowWidth, windowHeight, &offset[0]);
-       //}
-       // if(teams[1].playerHand[0][j].number != 0) {
+        }
+        if(teams[1].playerHand[0][j].number != 0) {
         printf("joueur2");
             initPlayerHand2TextureDestRect(&destRectsPlayerHand[1][j], windowWidth, windowHeight, &offset[1], &rotationCenters[0][j]);
-    //    } 
-      //  if(teams[0].playerHand[1][j].number != 0) {
+        } 
+        if(teams[0].playerHand[1][j].number != 0) {
         printf("joueur3");
             initPlayerHand3TextureDestRect(&destRectsPlayerHand[2][j], windowWidth, windowHeight, &offset[2]);
-     //   } 
-     //   if(teams[1].playerHand[1][j].number != 0) {
+        } 
+        if(teams[1].playerHand[1][j].number != 0) {
          printf("joueur4");
             initPlayerHand4TextureDestRect(&destRectsPlayerHand[3][j], windowWidth, windowHeight, &offset[3], &rotationCenters[1][j]);
-    //    }           
+        }           
     }           
 }
 
@@ -970,8 +986,8 @@ void initPlaymatTexture(SDL_Texture** texturePlaymat, SDL_Renderer** renderer) {
 
 void initPlaymatTextureDestRect(SDL_Rect* destRectPlaymat, int windowWidth, int windowHeight) {
 
-    destRectPlaymat->w = .8 * windowHeight;
-    destRectPlaymat->h = .8 * windowHeight;
+    destRectPlaymat->w = .7 * windowHeight;
+    destRectPlaymat->h = .7 * windowHeight;
     destRectPlaymat->x = windowWidth/2 - destRectPlaymat->w/2;
     destRectPlaymat->y = windowHeight/2 - destRectPlaymat->h/2;
 }
@@ -1239,7 +1255,9 @@ int SDL_main(int argc, char *argv[]) {
             gd.deckDestRect = destRectsCard[i][j];            
         }
     } 
-      
+
+    //SDL_Rect destRectsTrick[trickCards]
+
     shuffleCards(gd.deck); 
       
     SDL_RenderCopy(renderer, texturePlaymat, NULL, &destRectPlaymat);
@@ -1339,6 +1357,8 @@ int SDL_main(int argc, char *argv[]) {
 
     secondDeal(&gd, teams, trumpPlayer); 
 
+    initPlayersHandsTexturesDestRects(teams, destRectsPlayersHands, windowWidth, windowHeight, rotationCenters);   
+    addDestRectsPlayersHandsToTeams(destRectsPlayersHands, teams);
     {
         printf("\nAtout: %d, %d", gd.trump.color, gd.trump.number);
     }
@@ -1448,12 +1468,6 @@ int SDL_main(int argc, char *argv[]) {
         }
     }
 
-
-
-
-
-
-
     SDL_RenderPresent(renderer);
     SDL_Delay(2000);
 
@@ -1462,7 +1476,7 @@ int SDL_main(int argc, char *argv[]) {
     while (!quit) {
 
         SDL_Delay(16);
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);     
 
         while (SDL_PollEvent(&event) != 0) {
@@ -1477,7 +1491,7 @@ int SDL_main(int argc, char *argv[]) {
                 initPlaymatTextureDestRect(&destRectPlaymat, newWidth, newHeight); 
                 initDeckTexturesDestRects(destRectsCard, newWidth, newHeight);
              
-                initPlayersHandsTexturesDestRects(teams, destRectsPlayersHands, newWidth, newHeight, rotationCenters);   
+                initPlayersHandsTexturesDestRects(teams, destRectsPlayersHands, newWidth, newHeight, rotationCenters);                  
                 addDestRectsPlayersHandsToTeams(destRectsPlayersHands, teams);  
             }
         }  
@@ -1498,8 +1512,7 @@ int SDL_main(int argc, char *argv[]) {
                     if (teams[h].playerHand[i][j].color != 0) {
                     
                         if (i == 1) {
-
-                            SDL_RenderCopyEx(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j], angle, &rotationCenters[i][j], SDL_FLIP_NONE); 
+                            SDL_RenderCopyEx(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j], angle, &rotationCenters[h][j], SDL_FLIP_NONE); 
                         }
                         else {                   
                             SDL_RenderCopy(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j]);   
