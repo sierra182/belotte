@@ -147,7 +147,7 @@ void initTeams(team teams[amountTeams]) {
     }     
 }
 
-void initTrickDestRects(gameDirector** gd) {
+void initTrickDestRectsToZero(gameDirector** gd) {
 
     for (int i = 0; i < trickCards; i++) {
 
@@ -164,7 +164,7 @@ void initGameDirector(gameDirector* gd) {
     initCard(&gd->trump);  
     initTrick(gd->trick);
     initRect(&gd->deckDestRect);
-    initTrickDestRects(&gd);  
+    initTrickDestRectsToZero(&gd);  
 }
 
 void initDivideByColorResult(card divideByColorResult[amountColor][playersCards]) {
@@ -862,7 +862,7 @@ void addCardTexturesToCards(SDL_Texture* cardTextures[amountColor][playersCards]
     }
 }
 
-void initDeckDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight) {
+void initDeckDestRect(SDL_Rect* cardDestRect, int windowWidth, int windowHeight) {
 
     double x, y;
     int width, height;
@@ -874,19 +874,19 @@ void initDeckDestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight)
     primaryCenterY = windowHeight / 2;
     getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
 
-    destRectCard->w = width;
-    destRectCard->h = height; 
-    destRectCard->x = x;
-    destRectCard->y = y;    
+    cardDestRect->w = width;
+    cardDestRect->h = height; 
+    cardDestRect->x = x;
+    cardDestRect->y = y;    
 }
 
-void initDeckDestRects(SDL_Rect destRectsCard[amountColor][playersCards], int windowWidth, int windowHeight) {
+void initDeckDestRects(SDL_Rect cardDestRects[amountColor][playersCards], int windowWidth, int windowHeight) {
     
     for (int i = 0; i < amountColor; i++){  
 
         for (int j = 0; j < playersCards; j++){
 
-            initDeckDestRect(&destRectsCard[i][j], windowWidth, windowHeight);
+            initDeckDestRect(&cardDestRects[i][j], windowWidth, windowHeight);
         }
     }     
 }
@@ -984,7 +984,7 @@ void initTeamsTricksStacksDestRects(SDL_Rect tricksStacksDestRects[amountTeams][
     }
 }
 
-void addTricksStackDestRectsToTeams(SDL_Rect tricksStacksDestRects[amountTeams][totalCards], team teams[amountTeams]) {
+void addTricksStacksDestRectsToTeams(SDL_Rect tricksStacksDestRects[amountTeams][totalCards], team teams[amountTeams]) {
     
     for(int i = 0, l = 0; i < amountTeams; i++) {
 
@@ -1098,19 +1098,19 @@ void initPlayerHandsDestRects(team teams[amountTeams], SDL_Rect destRectsPlayerH
 
         if(teams[0].playerHand[0][j].number != 0) {
       
-            initPlayerHand1TextureDestRect(&destRectsPlayerHand[0][j], windowWidth, windowHeight, &offset[0]);
+            initPlayerHand1DestRect(&destRectsPlayerHand[0][j], windowWidth, windowHeight, &offset[0]);
         }
         if(teams[1].playerHand[0][j].number != 0) {
      
-            initPlayerHand2TextureDestRect(&destRectsPlayerHand[1][j], windowWidth, windowHeight, &offset[1], &rotationCenters[0][j]);
+            initPlayerHand2DestRect(&destRectsPlayerHand[1][j], windowWidth, windowHeight, &offset[1], &rotationCenters[0][j]);
         } 
         if(teams[0].playerHand[1][j].number != 0) {
      
-            initPlayerHand3TextureDestRect(&destRectsPlayerHand[2][j], windowWidth, windowHeight, &offset[2]);
+            initPlayerHand3DestRect(&destRectsPlayerHand[2][j], windowWidth, windowHeight, &offset[2]);
         } 
         if(teams[1].playerHand[1][j].number != 0) {
         
-            initPlayerHand4TextureDestRect(&destRectsPlayerHand[3][j], windowWidth, windowHeight, &offset[3], &rotationCenters[1][j]);
+            initPlayerHand4DestRect(&destRectsPlayerHand[3][j], windowWidth, windowHeight, &offset[3], &rotationCenters[1][j]);
         }           
     }           
 }
@@ -1368,7 +1368,7 @@ int SDL_main(int argc, char *argv[]) {
        
     SDL_Rect trickDestRects[trickCards];
     initTrickDestRects(trickDestRects, windowWidth, windowHeight);
-    addTrickToGameDirector(trickDestRects, &gd);
+    addTrickDestRectsToGameDirector(trickDestRects, &gd);
 
     SDL_Rect tricksStacksDestRects[amountTeams][totalCards];
     initTeamsTricksStacksDestRects(tricksStacksDestRects, windowWidth, windowHeight); 
@@ -1511,7 +1511,7 @@ int SDL_main(int argc, char *argv[]) {
                 addTrickDestRectsToGameDirector(trickDestRects, &gd);
 
                 initTeamsTricksStacksDestRects(tricksStacksDestRects, newWidth, newHeight); 
-                addTricksStackDestRectsToTeams(tricksStacksDestRects, teams); 
+                addTricksStacksDestRectsToTeams(tricksStacksDestRects, teams); 
             }
         }  
 
