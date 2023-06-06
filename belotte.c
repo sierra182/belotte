@@ -24,6 +24,19 @@
 #define trumpModelOrder 7, 8, 12, 13, 10, 14, 9, 11
 #define trumpModelOrderValues 0, 0, 3, 4, 10, 11, 14, 20
 
+typedef enum {
+
+    SortAll,
+    FirstDeal,
+    TrumpChoice,
+    SecondDeal,
+    Play,
+    CheckTrickResult,
+    FinalCheckTricksResults,
+    Default  
+     
+} gameState;
+
 typedef struct {
 
     SDL_Texture* texture; 
@@ -585,8 +598,7 @@ void playCard(gameDirector* gd, card playerHand[playersCards], int trickIndex, i
 
 void play(gameDirector* gd, team teams[amountTeams]) {
 
-    int choosenCardIndex = 0;
-    int player = 1;
+    int choosenCardIndex = 0;    
     int trickIndex = 0;
 
     initTrick(gd->trick);
@@ -880,24 +892,24 @@ void initDeckDestRect(SDL_Rect* cardDestRect, int windowWidth, int windowHeight)
     cardDestRect->y = y;    
 }
 
-void initDeckDestRects(SDL_Rect cardDestRects[amountColor][playersCards], int windowWidth, int windowHeight) {
+void initDeckDestRects(SDL_Rect deckDestRects[amountColor][playersCards], int windowWidth, int windowHeight) {
     
     for (int i = 0; i < amountColor; i++){  
 
         for (int j = 0; j < playersCards; j++){
 
-            initDeckDestRect(&cardDestRects[i][j], windowWidth, windowHeight);
+            initDeckDestRect(&deckDestRects[i][j], windowWidth, windowHeight);
         }
     }     
 }
 
-void addDeckDestRectsToDeck(SDL_Rect cardDestRects[amountColor][playersCards], gameDirector* gd) {
+void addDeckDestRectsToDeck(SDL_Rect deckDestRects[amountColor][playersCards], gameDirector* gd) {
 
     for (int i = 0; i < amountColor; i++) {
 
         for (int j = 0; j < playersCards; j++) {
             
-            gd->deckDestRect = cardDestRects[i][j];            
+            gd->deckDestRect = deckDestRects[i][j];            
         }
     } 
 }
@@ -1189,7 +1201,8 @@ Uint32 myCallbackFirst(Uint32 interval, void* param) {
     
     SDL_TimerID* timer_id = (SDL_TimerID*)param;
     
-    // Votre logique de timer ici...
+    //SDL_Init(SDL_INIT_TIMER);    
+    //SDL_TimerID myTimer = SDL_AddTimer(5000, myCallback, &myTimer);
 
     SDL_RemoveTimer(*timer_id);
     return 0;  
@@ -1197,25 +1210,30 @@ Uint32 myCallbackFirst(Uint32 interval, void* param) {
 
 int SDL_main(int argc, char *argv[]) {
 
-    printf("hello world!\n\n"); 
+   // printf("hello world!\n\n"); 
 
-    const int windowWidth = 600;
-    const int windowHeight = 600;    
+    int windowWidth = 600;
+    int windowHeight = 600;
+
     SDL_Window* window = NULL;
     SDL_Renderer* renderer = NULL;
     
     if (initWindow(&window, &renderer, windowWidth, windowHeight)) {
         return 1;
     }
-
+  
     team teams[amountTeams]; 
     initTeams(teams);
-    
+
     gameDirector gd;
     initGameDirector(&gd);
-
-    gd.team = 2;
+    gd.team = 1;
     gd.player = 1;
+
+    gameState gs = FirstDeal;
+    gameState gsNextState = Default; 
+
+    shuffleCards(gd.deck);
 
     {
     //shuffleCards(gd.deck); 
@@ -1410,75 +1428,24 @@ int SDL_main(int argc, char *argv[]) {
 
     SDL_Texture* texturePlaymat;
     initPlaymatTexture(&texturePlaymat, &renderer); 
-
     SDL_Rect destRectPlaymat;          
     initPlaymatDestRect(&destRectPlaymat, windowWidth, windowHeight);
        
     SDL_Texture* cardTextures[amountColor][playersCards];
     initCardTextures(cardTextures, &renderer);
     addCardTexturesToCards(cardTextures, &gd);   
-
-    SDL_Rect cardDestRects[amountColor][playersCards];
-    initDeckDestRects(cardDestRects, windowWidth, windowHeight);
-    addDeckDestRectsToDeck(cardDestRects, &gd);
-       
-    SDL_Rect trickDestRects[trickCards];
-    initTrickDestRects(trickDestRects, windowWidth, windowHeight);
-    addTrickDestRectsToGameDirector(trickDestRects, &gd);
-
-    SDL_Rect tricksStacksDestRects[amountTeams][totalCards];
-    initTeamsTricksStacksDestRects(tricksStacksDestRects, windowWidth, windowHeight); 
-    addTricksStacksDestRectsToTeams(tricksStacksDestRects, teams);
-
-    shuffleCards(gd.deck); 
-      
-    SDL_RenderCopy(renderer, texturePlaymat, NULL, &destRectPlaymat);
- 
-    deckRenderCopy(renderer, &gd);
- 
-    SDL_RenderPresent(renderer);
-    
-    //SDL_Init(SDL_INIT_TIMER);    
-    //SDL_TimerID myTimer = SDL_AddTimer(5000, myCallback, &myTimer);
-    SDL_Delay(1000);      
-
-    firstDeal(&gd, teams);
-  
-    deckRenderCopy(renderer, &gd);
-
+   
     double angle = 90.0;
     SDL_Point rotationCenters[teamsPlayers][playersCards];
-    SDL_Rect destRectsPlayersHands[players][playersCards];    
-    initPlayerHandsDestRects(teams, destRectsPlayersHands, windowWidth, windowHeight, rotationCenters);   
-    addPlayerHandsDestRectsToTeams(destRectsPlayersHands, teams);
+    SDL_Rect deckDestRects[amountColor][playersCards];
+    SDL_Rect destRectsPlayersHands[players][playersCards];
+    SDL_Rect trickDestRects[trickCards];   
+    SDL_Rect tricksStacksDestRects[amountTeams][totalCards];  
 
-    playerHandsRenderCopy(renderer, teams, angle, rotationCenters);
-
+    SDL_RenderCopy(renderer, texturePlaymat, NULL, &destRectPlaymat);   
     SDL_RenderPresent(renderer);
-
-    SDL_Delay(2000);
-
-    int trumpPlayer[2] = {0, 2}; 
-    modifyTrump(&gd);
-    addCardToPlayerHand(teams[0].playerHand[0], playersCards - 1,  gd.deck, 20);
-
-    secondDeal(&gd, teams, trumpPlayer); 
-
-    initPlayerHandsDestRects(teams, destRectsPlayersHands, windowWidth, windowHeight, rotationCenters);   
-    addPlayerHandsDestRectsToTeams(destRectsPlayersHands, teams);  
-
-    playerHandsRenderCopy(renderer, teams, angle, rotationCenters);
-
-    SDL_RenderPresent(renderer);
-    SDL_Delay(2000);
-
-    sortAllPlayersHands(gd, teams); 
-     
-    playerHandsRenderCopy(renderer, teams, angle, rotationCenters);
-
-    SDL_RenderPresent(renderer);
-    SDL_Delay(2000);
-
+    SDL_Delay(1000);
+   
     SDL_Event event;
     int quit = 0;    
     while (!quit) {
@@ -1494,12 +1461,14 @@ int SDL_main(int argc, char *argv[]) {
             }
             else if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED) {
            
-                int newWidth = event.window.data1;
-                int newHeight = event.window.data2;
+                int newWidth = windowWidth = event.window.data1;
+                int newHeight = windowHeight = event.window.data2;
 
                 initPlaymatDestRect(&destRectPlaymat, newWidth, newHeight); 
-                initDeckDestRects(cardDestRects, newWidth, newHeight);
-             
+
+                initDeckDestRects(deckDestRects, newWidth, newHeight);
+                addDeckDestRectsToDeck(deckDestRects, &gd);
+
                 initPlayerHandsDestRects(teams, destRectsPlayersHands, newWidth, newHeight, rotationCenters);                  
                 addPlayerHandsDestRectsToTeams(destRectsPlayersHands, teams); 
 
@@ -1509,27 +1478,102 @@ int SDL_main(int argc, char *argv[]) {
                 initTeamsTricksStacksDestRects(tricksStacksDestRects, newWidth, newHeight); 
                 addTricksStacksDestRectsToTeams(tricksStacksDestRects, teams); 
             }
-        }  
 
-        SDL_RenderCopy(renderer, texturePlaymat, NULL, &destRectPlaymat);
-        
+            else if (event.type == SDL_MOUSEBUTTONDOWN) {
+                     
+                int x, y;
+                SDL_GetMouseState(&x, &y);                       
+                if (SDL_PointInRect(&((SDL_Point){x, y}), &gd.deckDestRect)) { 
+
+                    for (int h = 0; h < amountTeams; h++) {
+
+                        for (int i = 0; i < teamsPlayers; i++) {
+
+                            for (int j = 0; j < playersCards; j++) {
+
+                                gd.
+                            }
+                        }
+                    }
+                }
+            }  
+
+        switch (gs) {
+
+            case SortAll:
+             
+                sortAllPlayersHands(gd, teams);
+
+                if (gsSortAllSwitch == TrumpChoice) {
+                    gs = Default;  
+                } 
+                else if (gsSortAllSwitch== Play) {
+                    gs = Play;                     
+                }                
+                break;
+
+            case FirstDeal:
+
+                firstDeal(&gd, teams);  
+
+                gs = SortAll;
+                gsSortAllSwitch = TrumpChoice;
+                break;
+            
+            case TrumpChoice:
+
+                int trumpPlayer[2] = {0,0};       
+                chooseTrump(&gd, teams, trumpPlayer);
+
+                gs = SecondDeal;
+                break;    
+
+            case SecondDeal:
+
+                secondDeal(&gd, teams, trumpPlayer);
+
+                gs = SortAll;
+                gsSortAllSwitch = Play;               
+                break;
+
+            case Play:
+
+                gs = Default;  
+                play(&gd, teams);
+                gs = CheckTrickResult;
+                break;
+
+            case CheckTrickResult:
+
+                checkTrickResult(&gd, teams);
+
+                gs = FinalCheckTricksResults;
+                break;
+
+            case FinalCheckTricksResults:
+                break;
+
+            default:          
+                break;
+        }
+   
+        initDeckDestRects(deckDestRects, windowWidth, windowHeight);
+        addDeckDestRectsToDeck(deckDestRects, &gd);
+        initPlayerHandsDestRects(teams, destRectsPlayersHands, windowWidth, windowHeight, rotationCenters);                  
+        addPlayerHandsDestRectsToTeams(destRectsPlayersHands, teams); 
+        initTrickDestRects(trickDestRects, windowWidth, windowHeight);
+        addTrickDestRectsToGameDirector(trickDestRects, &gd);
+        initTeamsTricksStacksDestRects(tricksStacksDestRects, windowWidth, windowHeight); 
+        addTricksStacksDestRectsToTeams(tricksStacksDestRects, teams);          
+
+        SDL_RenderCopy(renderer, texturePlaymat, NULL, &destRectPlaymat);        
         deckRenderCopy(renderer, &gd);
-
-        playerHandsRenderCopy(renderer, teams, angle, rotationCenters);  
-
+        playerHandsRenderCopy(renderer, teams, angle, rotationCenters); 
         trickRenderCopy(renderer, &gd);
+        tricksStacksRenderCopy(renderer, teams);  
+        tricksStacksRenderCopy(renderer, teams); 
 
-        tricksStacksRenderCopy(renderer, teams);    
-
-        //  for (int i = 0; i < 8; i++) {
-
-            play(&gd, teams);
-            checkTrickResult(&gd, teams);            
-            tricksStacksRenderCopy(renderer, teams);           
-        // }
-
-        SDL_Delay(1000);
-        SDL_RenderPresent(renderer);         
+        SDL_RenderPresent(renderer);   
     }
    
     for (int i = 0; i <totalCards; i++) {
