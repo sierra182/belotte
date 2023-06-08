@@ -866,19 +866,19 @@ void getPositionFromCenter(int centerX, int centerY, int width, int height, doub
     *y = centerY - (height/2.0);  
 }
 
-void initPlaymatTexture(SDL_Texture** texturePlaymat, SDL_Renderer** renderer) {
+void initPlaymatTexture(SDL_Texture** playmatTexture, SDL_Renderer** renderer) {
 
-    SDL_Surface* surfacePlaymat = IMG_Load("C:\\belotte\\playmat.png");    
-    *texturePlaymat = SDL_CreateTextureFromSurface(*renderer, surfacePlaymat);
-    SDL_FreeSurface(surfacePlaymat);
+    SDL_Surface* playmatSurface = IMG_Load("C:\\belotte\\playmat.png");    
+    *playmatTexture = SDL_CreateTextureFromSurface(*renderer, playmatSurface);
+    SDL_FreeSurface(playmatSurface);
 }
 
-void initPlaymatDestRect(SDL_Rect* destRectPlaymat, int windowWidth, int windowHeight) {
+void initPlaymatDestRect(SDL_Rect* playmatDestRect, int windowWidth, int windowHeight) {
 
-    destRectPlaymat->w = .7 * windowHeight;
-    destRectPlaymat->h = .7 * windowHeight;
-    destRectPlaymat->x = windowWidth/2 - destRectPlaymat->w/2;
-    destRectPlaymat->y = windowHeight/2 - destRectPlaymat->h/2;
+    playmatDestRect->w = .7 * windowHeight;
+    playmatDestRect->h = .7 * windowHeight;
+    playmatDestRect->x = windowWidth/2 - playmatDestRect->w/2;
+    playmatDestRect->y = windowHeight/2 - playmatDestRect->h/2;
 }
 
 void initCardTextures(SDL_Texture* textureCard[amountColor][playersCards], SDL_Renderer** renderer) {
@@ -1174,6 +1174,98 @@ void addPlayerHandsDestRectsToTeams(SDL_Rect destRectsPlayersHands[players][play
     }  
 }
 
+void initCrossTexture(SDL_Texture** crossTexture, SDL_Renderer** renderer) {
+
+    SDL_Surface* crossSurface = IMG_Load("C:\\belotte\\cross.png");    
+    *crossTexture = SDL_CreateTextureFromSurface(*renderer, crossSurface);
+    SDL_FreeSurface(crossSurface);;
+}
+
+void initCircleTexture(SDL_Texture** circleTexture, SDL_Renderer** renderer) {
+
+    SDL_Surface* circleSurface = IMG_Load("C:\\belotte\\circle.png");    
+    *circleTexture = SDL_CreateTextureFromSurface(*renderer, circleSurface);
+    SDL_FreeSurface(circleSurface);;
+}
+
+void  initCrossAndCircleDestRects(SDL_Rect crossAndCircleDestRects[2], double x, double y, int containerWidth, int containerHeight, int elementSize) {
+
+    crossAndCircleDestRects[0].x = x;
+    crossAndCircleDestRects[0].y = y;
+    crossAndCircleDestRects[0].w = elementSize;
+    crossAndCircleDestRects[0].h = elementSize;
+
+    if (containerWidth < containerHeight) {
+        
+        crossAndCircleDestRects[1].x = x;
+        crossAndCircleDestRects[1].y = y + elementSize;
+    } 
+    else {
+
+        crossAndCircleDestRects[1].x = x + elementSize;
+        crossAndCircleDestRects[1].y = y; 
+    }     
+    crossAndCircleDestRects[1].w = elementSize;
+    crossAndCircleDestRects[1].h = elementSize;
+}
+
+void initCrossAndCircleContainerDestRect(SDL_Rect crossAndCircleDestRects[2], int positionMultiplicator, int positionInverter, int windowWidth, int windowHeight) {
+
+    double x, y;
+    int primaryCenterX, primaryCenterY;
+    int containerWidth, containerHeight;
+    int globalCenterX, globalCenterY;
+      
+    int elementSize = .05 * windowHeight;    
+    containerWidth = containerHeight = elementSize; 
+
+    globalCenterX = windowWidth / 2;
+    globalCenterY = windowHeight / 2;
+
+    int mat = .7 * windowHeight;  
+    int positionCalcul = mat / 5;
+    int signedPositionCalcul;
+
+    if (positionInverter == 1) {
+        
+        signedPositionCalcul = globalCenterY + positionCalcul * positionMultiplicator;
+        primaryCenterX = globalCenterX;
+        primaryCenterY = signedPositionCalcul;
+        containerWidth *= 2; 
+    } 
+    else if (positionInverter == 0) {
+
+        signedPositionCalcul = globalCenterX + positionCalcul * positionMultiplicator;
+        primaryCenterY = globalCenterY;        
+        primaryCenterX = signedPositionCalcul;      
+        containerHeight *= 2;  
+    }
+    getPositionFromCenter(primaryCenterX, primaryCenterY, containerWidth, containerHeight, &x, &y);
+
+    initCrossAndCircleDestRects(crossAndCircleDestRects, x, y, containerWidth, containerHeight, elementSize);  
+}
+
+void initCrossAndCircleContainerDestRects(SDL_Rect crossAndCircleDestRects[players][2],  int windowWidth, int windowHeight) {
+
+    int crossAndCircleDestRectsIndex = 0, positionMultiplicator = 0, positionInverter = 0;
+    
+    for (int i = positionMultiplicator, k = crossAndCircleDestRectsIndex; i < 2 ; i ++) {
+
+        for (int j = positionInverter; j < 2 ; j++, k++) {
+
+            if (i == 0)
+            {
+                positionMultiplicator = -1;
+            }
+            else {
+                positionMultiplicator = 1;
+            }
+            initCrossAndCircleContainerDestRect(crossAndCircleDestRects[k], positionMultiplicator, j, windowWidth, windowHeight);
+        }          
+    }           
+    
+}
+
 void deckRenderCopy(SDL_Renderer* renderer, gameDirector* gd) {
 
     for (int i = 0; i < totalCards; i++) {   
@@ -1459,10 +1551,10 @@ int SDL_main(int argc, char *argv[]) {
     */
     }
 
-    SDL_Texture* texturePlaymat;
-    initPlaymatTexture(&texturePlaymat, &renderer); 
-    SDL_Rect destRectPlaymat;          
-    initPlaymatDestRect(&destRectPlaymat, windowWidth, windowHeight);
+    SDL_Texture* playmatTexture;
+    initPlaymatTexture(&playmatTexture, &renderer); 
+    SDL_Rect playmatDestRect;          
+    initPlaymatDestRect(&playmatDestRect, windowWidth, windowHeight);
        
     SDL_Texture* cardTextures[amountColor][playersCards];
     initCardTextures(cardTextures, &renderer);
@@ -1480,11 +1572,19 @@ int SDL_main(int argc, char *argv[]) {
     initTeamsTricksStacksDestRects(tricksStacksDestRects, windowWidth, windowHeight); 
     addTricksStacksDestRectsToTeams(tricksStacksDestRects, teams); 
 
+    SDL_Texture* crossTexture;
+    initCrossTexture(&crossTexture, &renderer); 
+    SDL_Texture* circleTexture;
+    initCircleTexture(&circleTexture, &renderer);
+
+    SDL_Rect crossAndCircleDestRects[players][2];          
+    initCrossAndCircleContainerDestRects(crossAndCircleDestRects, windowWidth, windowHeight);
+
     double angle = 90.0;
     SDL_Point rotationCenters[teamsPlayers][playersCards];
     SDL_Rect destRectsPlayersHands[players][playersCards];
 
-    SDL_RenderCopy(renderer, texturePlaymat, NULL, &destRectPlaymat);   
+    SDL_RenderCopy(renderer, playmatTexture, NULL, &playmatDestRect);   
     SDL_RenderPresent(renderer);
     SDL_Delay(1000);
    
@@ -1510,7 +1610,7 @@ int SDL_main(int argc, char *argv[]) {
                 int newWidth = windowWidth = event.window.data1;
                 int newHeight = windowHeight = event.window.data2;
 
-                initPlaymatDestRect(&destRectPlaymat, newWidth, newHeight); 
+                initPlaymatDestRect(&playmatDestRect, newWidth, newHeight); 
 
                 initDeckDestRects(deckDestRects, newWidth, newHeight);
                 addDeckDestRectsToDeck(deckDestRects, &gd);
@@ -1523,27 +1623,48 @@ int SDL_main(int argc, char *argv[]) {
 
                 initTeamsTricksStacksDestRects(tricksStacksDestRects, newWidth, newHeight); 
                 addTricksStacksDestRectsToTeams(tricksStacksDestRects, teams); 
+
+                initCrossAndCircleContainerDestRects(crossAndCircleDestRects, newWidth, newHeight);
             }
 
-           /* else if (event.type == SDL_MOUSEBUTTONDOWN) {
-                     
+            else if (event.type == SDL_MOUSEBUTTONDOWN) {
+
                 int x, y;
-                SDL_GetMouseState(&x, &y);                       
-                if (SDL_PointInRect(&((SDL_Point){x, y}), &gd.deckDestRect) && gd.deck[totalCards - 1].color != 0) { 
+                SDL_GetMouseState(&x, &y);  
 
-                    gd.
-                    for (int h = 0; h < amountTeams; h++) {
+                /*if (SDL_PointInRect(&((SDL_Point){x, y}),&crossDestRect) ) {  //verif si ne bug pas lors de lacces a un destrect inexistant
+                                
+                    if (gsNextState == Play) {
 
-                        for (int i = 0; i < teamsPlayers; i++) {
+                                    gd.teamEvent = h;
+                                    gd.playerEvent = i;
+                                    gd.choosenCardIndex = j;
+                                    gs = Play; 
+                                }                               
+                            }
+                }*/
 
-                            for (int j = 0; j < playersCards; j++) {
+                for (int h = 0; h < amountTeams; h++) {
 
-                               
+                    for (int i = 0; i < teamsPlayers; i++) {
+
+                        for (int j = 0; j < playersCards; j++) {
+
+                            if (SDL_PointInRect(&((SDL_Point){x, y}), &teams[h].playerHandDestRects[i][j]) ) {  //verif si ne bug pas lors de lacces a un destrect inexistant
+                                
+                                if (gsNextState == Play) {
+
+                                    gd.teamEvent = h;
+                                    gd.playerEvent = i;
+                                    gd.choosenCardIndex = j;
+                                    gs = Play; 
+                                }                               
                             }
                         }
-                    }
-                }*/ 
-            } 
+                    }   
+                }
+            }
+        } 
         
         switch (gs) {
 
@@ -1621,21 +1742,29 @@ int SDL_main(int argc, char *argv[]) {
          
         initPlayerHandsDestRects(teams, destRectsPlayersHands, windowWidth, windowHeight, rotationCenters);                  
         addPlayerHandsDestRectsToTeams(destRectsPlayersHands, teams);  
-
-        SDL_RenderCopy(renderer, texturePlaymat, NULL, &destRectPlaymat);        
+        SDL_RenderCopy(renderer, playmatTexture, NULL, &playmatDestRect);        
         deckRenderCopy(renderer, &gd);
         playerHandsRenderCopy(renderer, teams, angle, rotationCenters); 
         trickRenderCopy(renderer, &gd);
         tricksStacksRenderCopy(renderer, teams);  
         tricksStacksRenderCopy(renderer, teams); 
+        
+        for (int i = 0; i < players; i++) {
+
+            SDL_RenderCopy(renderer, crossTexture, NULL, &crossAndCircleDestRects[i][0]);
+            SDL_RenderCopy(renderer, circleTexture, NULL, &crossAndCircleDestRects[i][1]);
+        }
+        
 
         SDL_RenderPresent(renderer);   
     }
    
     for (int i = 0; i <totalCards; i++) {
         SDL_DestroyTexture(gd.deck[i].texture);
-    }   
-    SDL_DestroyTexture(texturePlaymat);   
+    }
+    SDL_DestroyTexture(crossTexture);   
+    SDL_DestroyTexture(circleTexture);  
+    SDL_DestroyTexture(playmatTexture);   
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window); 
     SDL_Quit();       
