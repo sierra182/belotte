@@ -881,7 +881,7 @@ int initWindow(SDL_Window** window, SDL_Renderer** renderer, int width, int heig
     return 0;
 }
 
-void getPositionFromCenter(int centerX, int centerY, int width, int height, double* x, double* y) {
+void getPositionFromCenter(double centerX, double centerY, double width, double height, double* x, double* y) {
 
     *x = centerX - (width/2.0);
     *y = centerY - (height/2.0);  
@@ -1064,95 +1064,95 @@ void addTricksStacksDestRectsToTeams(SDL_Rect tricksStacksDestRects[amountTeams]
 void initPlayerHand1DestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, double* offset) {
     
     double x, y;
-    int primaryCenterX, primaryCenterY; 
+    double primaryCenterX, primaryCenterY; 
     
-    double cardSpace = (.7 * windowHeight) / 8.0 / 2.0;
-    double matStart = ((windowWidth / 2.0) - ((.7 * windowHeight) / 2.0));
-    primaryCenterX =(int) matStart + cardSpace;
+    double cardSpace = (.70 * windowHeight) / 8.0 / 2.0;
+    double matStart = ((windowWidth / 2.0) - ((.70 * windowHeight) / 2.0));
+    primaryCenterX = matStart + cardSpace;
 
-    int width = .08 * windowHeight;
-    int height = 3 * width / 2; 
-    primaryCenterY = (windowHeight / 2) + ((windowHeight *.7) / 2) + (height / 2) + (.01 * windowHeight);         
+    double width = .08 * windowHeight;
+    double height = 3 * width / 2.0; 
+    primaryCenterY = (windowHeight / 2.0) + ((windowHeight *.70) / 2.0) + (height / 1.59);         
     getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
 
-    destRectCard->w = width;
-    destRectCard->h = height;
-    destRectCard->x = x + (int) *offset;
-    destRectCard->y = y;
+    destRectCard->w = round(width);
+    destRectCard->h = round(height);
+    destRectCard->x = round(x + *offset);
+    destRectCard->y = round(y);
     *offset += 2 * cardSpace;
 }
 
 void initPlayerHand2DestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, double* offset, SDL_Point* rotationCenter) {
     
     double x, y;
-    int primaryCenterX, primaryCenterY;    
+    double primaryCenterX, primaryCenterY;    
 
-    int width = .08 * windowHeight;
-    int height = 3 * width / 2;
+    double width = .08 * windowHeight;
+    double height = 3 * width / 2.0;
 
-    primaryCenterX = (windowWidth / 2) - ((windowHeight *.7) / 2) - (height / 2) - (.01 * windowHeight);
-    double cardSpace = (.7 * windowHeight) / 8.0 / 2.0;
-    double matStart = ((windowHeight / 2.0) - ((.7 * windowHeight) / 2.0));
+    primaryCenterX = (windowWidth / 2.0) - ((windowHeight *.70) / 2.0) - (height / 1.59);
+    double cardSpace = (.70 * windowHeight) / 8.0 / 2.0;
+    double matStart = ((windowHeight / 2.0) - ((.70 * windowHeight) / 2.0));
    
-    primaryCenterY =(int) matStart + cardSpace;
-    int centerX = width / 2;
-    int centerY = height / 2; 
+    primaryCenterY = matStart + cardSpace;
+    double centerX = width / 2.0;
+    double centerY = height / 2.0; 
     rotationCenter->x = centerX ;
     rotationCenter->y = centerY;     
     getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
  
-    destRectCard->w = width;
-    destRectCard->h = height;
-    destRectCard->x = x;
-    destRectCard->y = y + *offset;
+    destRectCard->w = round(width);
+    destRectCard->h = round(height);
+    destRectCard->x = round(x);
+    destRectCard->y = round(y + *offset);
     *offset += 2 * cardSpace;
 }
 
 void initPlayerHand3DestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, double* offset) {
     
     double x, y;
-    int primaryCenterX, primaryCenterY;    
+    double primaryCenterX, primaryCenterY;    
 
-    double cardSpace = (.7 * windowHeight) / 8.0 / 2.0;
-    double matStart = ((windowWidth / 2.0) - ((.7 * windowHeight) / 2.0));
-    primaryCenterX =(int) matStart + cardSpace;
+    double cardSpace = (.70 * windowHeight) / 8.0 / 2.0;
+    double matStart = ((windowWidth / 2.0) - ((.70 * windowHeight) / 2.0));
+    primaryCenterX = matStart + cardSpace;
 
-    int width = .08 * windowHeight;
-    int height = 3 * width / 2;
-    primaryCenterY = (windowHeight / 2) - ((windowHeight *.7) / 2) - (height / 2) - (.01 * windowHeight);           
+    double width = .08 * windowHeight;
+    double height = 3 * width / 2.0;
+    primaryCenterY = (windowHeight / 2.0) - ((windowHeight *.70) / 2.0) - (height / 1.59);           
     getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
 
-    destRectCard->w = width;
-    destRectCard->h = height;
-    destRectCard->x = x + (int) *offset;
-    destRectCard->y = y;
+    destRectCard->w = round(width);
+    destRectCard->h = round(height);
+    destRectCard->x = round(x + *offset);
+    destRectCard->y = round(y);
     *offset += 2 * cardSpace;
 }
 
 void initPlayerHand4DestRect(SDL_Rect* destRectCard, int windowWidth, int windowHeight, double* offset, SDL_Point* rotationCenter) {
     
     double x, y;
-    int primaryCenterX, primaryCenterY; 
+    double primaryCenterX, primaryCenterY; 
  
-    int width = .08 * windowHeight;
-    int height = 3 * width / 2;
+    double width = .08 * windowHeight;
+    double height = 3 * width / 2.0;
 
-    double cardSpace = (.7 * windowHeight) / 8.0 / 2.0;
+    double cardSpace = (.70 * windowHeight) / 8.0 / 2.0;
     double matStart = ((windowHeight / 2.0) - ((.7 * windowHeight) / 2.0));
    
-    primaryCenterY =(int) matStart + cardSpace;
-    primaryCenterX = (windowWidth / 2) + ((windowHeight *.7) / 2) + (height / 2) + (.01 * windowHeight);
+    primaryCenterY =matStart + cardSpace;
+    primaryCenterX = (windowWidth / 2.0) + ((windowHeight *.70) / 2.0) + (height / 1.58);
 
-    int centerX = width / 2;
-    int centerY = height / 2; 
+    double centerX = width / 2.0;
+    double centerY = height / 2.0; 
     rotationCenter->x = centerX ;
     rotationCenter->y = centerY;     
     getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
  
-    destRectCard->w = width;
-    destRectCard->h = height;
-    destRectCard->x = x;
-    destRectCard->y = y + *offset;
+    destRectCard->w = round(width);
+    destRectCard->h = round(height);
+    destRectCard->x = round(x);
+    destRectCard->y = round(y + *offset);
     *offset += 2 * cardSpace;
 }
 
