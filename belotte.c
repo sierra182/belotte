@@ -30,6 +30,7 @@ typedef enum {
 
     SortAll,
     FirstDeal,
+    NegativeChoice,
     TrumpChoice,
     SecondDeal,
     Play,
@@ -62,12 +63,15 @@ typedef struct {
 
 typedef struct {
 
-    SDL_Rect deckDestRect;
-    SDL_Rect trickDestRects[trickCards];    
-
     card deck[totalCards];
+    SDL_Rect deckDestRect;
+
     card trick[trickCards];
+    SDL_Rect trickDestRects[trickCards];    
+   
     card trump;  
+    SDL_Texture* trumpTextures[amountColor];
+    SDL_Rect trumpDestRect;
 
     int team;
     int player;
@@ -173,6 +177,14 @@ void initTrickDestRectsToZero(gameDirector** gd) {
     }
 }
 
+void initColorsTextures(gameDirector** gd) {
+
+    for (int i = 0; i < amountColor; i++) {
+
+        (*gd)->trumpTextures[i] = NULL;
+    }
+}
+
 void initGameDirector(gameDirector* gd) {
    
     gd->player = 0;
@@ -181,8 +193,10 @@ void initGameDirector(gameDirector* gd) {
     gd->teamEvent = 0;   
     gd->choosenCardIndex = 0;
 
+    initRect(&gd->trumpDestRect);
+    initColorsTextures(&gd);
     initDeck(gd->deck);  
-    initCard(&gd->trump);  
+    initCard(&gd->trump);      
     initTrick(gd->trick);
     initRect(&gd->deckDestRect);
     initTrickDestRectsToZero(&gd);  
@@ -446,7 +460,7 @@ void addCardToPlayerHand(card playerHand[playersCards], int pHindex, card deck[t
 }
 
 void removeCardFromPlayerHand(card playerHand[playersCards], int pHIndex) {
-    
+
     initCard(&playerHand[pHIndex]);
 }
 
@@ -469,32 +483,36 @@ void chooseTrump(gameDirector* gd, team teams[amountTeams], int resultTrumpPlaye
     
     switch (input) {
         case 1:
+
             printf("Vous avez saisi 1.\n");           
             addCardToPlayerHand(teams[0].playerHand[0], playersCards - 1,  gd->deck, trump);
             resultTrumpPlayer[0] = 0;
             resultTrumpPlayer[1] = 0;
-            // setActualPlayer(&gd, 0, 0);
+         
             break;
         case 2:
+
             printf("Vous avez saisi 2.\n");
             addCardToPlayerHand(teams[1].playerHand[0], playersCards - 1,  gd->deck, trump);
             resultTrumpPlayer[0] = 1;
             resultTrumpPlayer[1] = 0;
-            // setActualPlayer(&gd, 1, 0);
+          
             break;
         case 3:
+
             printf("Vous avez saisi 3.\n");
             addCardToPlayerHand(teams[0].playerHand[1], playersCards - 1,  gd->deck, trump);
             resultTrumpPlayer[0] = 0;
             resultTrumpPlayer[1] = 1;
-            // setActualPlayer(&gd, 0, 1);
+            
             break;
         case 4:
+        
             printf("Vous avez saisi 4.\n");
             addCardToPlayerHand(teams[1].playerHand[1], playersCards - 1,  gd->deck, trump);
             resultTrumpPlayer[0] = 1;
             resultTrumpPlayer[1] = 1;
-            // setActualPlayer(&gd, 1, 1);
+          
             break;
 
         default:
@@ -610,17 +628,20 @@ void playCard(gameDirector* gd, card playerHand[playersCards], int trickIndex, i
     removeCardFromPlayerHand(playerHand, pHIndex);  
 }
 
-int play(gameDirector* gd, team teams[amountTeams], int trickIndex) {
+int knowIfPlayerTurn(gameDirector* gd) {
 
     int isPlayerTurn = 0;
     if (gd->team == gd->teamEvent && gd->player == gd->playerEvent) {
 
        isPlayerTurn = 1; 
     } 
-    else {
-        isPlayerTurn = 0;
-    }    
+    return isPlayerTurn;
+}
 
+int play(gameDirector* gd, team teams[amountTeams], int trickIndex) {
+
+    int isPlayerTurn = knowIfPlayerTurn(gd);
+     
     if (isPlayerTurn) {  
 
         playCard(gd, teams[gd->team-1].playerHand[gd->player-1], trickIndex, gd->choosenCardIndex); 
@@ -936,7 +957,7 @@ void initDeckDestRects(SDL_Rect deckDestRects[amountColor][playersCards], int wi
     }     
 }
 
-void addDeckDestRectsToDeck(SDL_Rect deckDestRects[amountColor][playersCards], gameDirector* gd) {
+void addDeckDestRectsToGameDirector(SDL_Rect deckDestRects[amountColor][playersCards], gameDirector* gd) {
 
     for (int i = 0; i < amountColor; i++) {
 
@@ -992,7 +1013,7 @@ void initTeam1TricksStackDestRects(SDL_Rect* tricksStackDestRect, int windowWidt
     int width = .08 * windowHeight;
     int height = 3 * width / 2;
 
-    primaryCenterY = .3 * windowHeight;
+    primaryCenterY = .7 * windowHeight;
     primaryCenterX = windowWidth / 2;
     getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
 
@@ -1010,7 +1031,7 @@ void initTeam2TricksStackDestRects(SDL_Rect* tricksStackDestRect, int windowWidt
     int width = .08 * windowHeight;
     int height = 3 * width / 2;
 
-    primaryCenterY = .7 * windowHeight;
+    primaryCenterY = .3 * windowHeight;
     primaryCenterX = windowWidth / 2;
     getPositionFromCenter(primaryCenterX, primaryCenterY, width, height, &x, &y);  
 
@@ -1135,14 +1156,28 @@ void initPlayerHand4DestRect(SDL_Rect* destRectCard, int windowWidth, int window
     *offset += 2 * cardSpace;
 }
 
-void initPlayerHandsDestRects(team teams[amountTeams], SDL_Rect destRectsPlayerHand[players][playersCards], int windowWidth, int windowHeight, SDL_Point rotationCenters[teamsPlayers][playersCards]) {
+void initTeamsPlayerHandsDestRectsToZero(team teams[amountTeams]) {
 
+    for ( int i = 0; i < teamsPlayers; i++) {
+
+        for (int j = 0; j < amountTeams; j++) {
+
+            for (int k = 0; k < playersCards; k++) {
+                
+                initRect(&teams[j].playerHandDestRects[i][k]);
+            }
+        }
+    }
+}
+
+void initPlayerHandsDestRects(team teams[amountTeams], SDL_Rect destRectsPlayerHand[players][playersCards], int windowWidth, int windowHeight, SDL_Point rotationCenters[teamsPlayers][playersCards]) {
+    
     double offset[players] = {0, 0, 0, 0};   
        
     for (int j = 0; j < playersCards; j++) {
 
         if(teams[0].playerHand[0][j].number != 0) {
-      
+
             initPlayerHand1DestRect(&destRectsPlayerHand[0][j], windowWidth, windowHeight, &offset[0]);
         }
         if(teams[1].playerHand[0][j].number != 0) {
@@ -1162,13 +1197,15 @@ void initPlayerHandsDestRects(team teams[amountTeams], SDL_Rect destRectsPlayerH
 
 void addPlayerHandsDestRectsToTeams(SDL_Rect destRectsPlayersHands[players][playersCards], team teams[amountTeams]) {
     
-    for(int i = 0, l = 0; i < amountTeams; i++) {
+    initTeamsPlayerHandsDestRectsToZero(teams);
 
-        for(int j = 0; j < teamsPlayers; j++, l++) {
+    for(int i = 0, l = 0; i < teamsPlayers; i++) {
+
+        for(int j = 0; j < amountTeams ; j++, l++) {
 
             for(int k = 0; k < playersCards; k++) {
              
-                teams[i].playerHandDestRects[j][k] = destRectsPlayersHands[l][k];                
+                teams[j].playerHandDestRects[i][k] = destRectsPlayersHands[l][k];                
             }
         }
     }  
@@ -1223,7 +1260,7 @@ void initCrossAndCircleContainerDestRect(SDL_Rect crossAndCircleDestRects[2], in
     globalCenterY = windowHeight / 2;
 
     int mat = .7 * windowHeight;  
-    int positionCalcul = mat / 5;
+    int positionCalcul = mat / 2.35;
     int signedPositionCalcul;
 
     if (positionInverter == 1) {
@@ -1247,7 +1284,9 @@ void initCrossAndCircleContainerDestRect(SDL_Rect crossAndCircleDestRects[2], in
 
 void initCrossAndCircleContainerDestRects(SDL_Rect crossAndCircleDestRects[players][2],  int windowWidth, int windowHeight) {
 
-    int crossAndCircleDestRectsIndex = 0, positionMultiplicator = 0, positionInverter = 0;
+    int crossAndCircleDestRectsIndex = 0;
+    int positionMultiplicator = 0;
+    int positionInverter = 0;
     
     for (int i = positionMultiplicator, k = crossAndCircleDestRectsIndex; i < 2 ; i ++) {
 
@@ -1266,30 +1305,162 @@ void initCrossAndCircleContainerDestRects(SDL_Rect crossAndCircleDestRects[playe
     
 }
 
+void initScoreDestRects(SDL_Rect scoreDestRects[amountTeams],  int windowWidth, int windowHeight) {
+
+    double x, y;
+    double centerX, centerY;
+    double width, height;
+
+    width = .04 * windowHeight;
+    height = 2 * width;
+    centerX = windowWidth / 2.0 + .2 * windowHeight ;
+
+    double switchY = .8;
+    for (int i = 0; i < amountTeams; i++) {
+
+        centerY = switchY * windowHeight;
+        getPositionFromCenter(centerX, centerY, width, height, &x, &y);
+        scoreDestRects[i].w = width;
+        scoreDestRects[i].h = height;
+        scoreDestRects[i].x = x;
+        scoreDestRects[i].y = y;
+
+        switchY -= .6;
+    }    
+}
+
 void deckRenderCopy(SDL_Renderer* renderer, gameDirector* gd) {
 
-    for (int i = 0; i < totalCards; i++) {   
+    for (int i = totalCards - 1; i >= 0; i--) {   
 
         SDL_RenderCopy(renderer, gd->deck[i].texture, NULL,  &gd->deckDestRect);                   
     }
 }
 
+void initScoreTexture(SDL_Renderer** renderer, SDL_Texture* scoreTexture[amountTeams], TTF_Font* font, team teams[amountTeams]) {
+
+    SDL_Color scoreColor = {0, 0, 0};
+    font = TTF_OpenFont("C:\\sebtest\\Rainbow Season.otf", 24);      
+
+    char team1Score[10]; 
+    sprintf(team1Score, "%d", teams[0].score);    
+    SDL_Surface* score1Surface = TTF_RenderText_Solid(font, team1Score, scoreColor);
+    scoreTexture[0] = SDL_CreateTextureFromSurface(*renderer, score1Surface);
+    SDL_FreeSurface(score1Surface);
+
+    char team2Score[10];
+    sprintf(team2Score, "%d", teams[1].score);
+    SDL_Surface* score2Surface = TTF_RenderText_Solid(font, team2Score, scoreColor);
+    scoreTexture[1] = SDL_CreateTextureFromSurface(*renderer, score2Surface);
+    SDL_FreeSurface(score2Surface);
+}
+
+void initTrumpColorTexture(SDL_Texture* colorsTextures[amountColor], SDL_Renderer** renderer) {
+
+    SDL_Surface* diamondSurface = IMG_Load("C:\\belotte\\diamond.png");                 
+    colorsTextures[0] = SDL_CreateTextureFromSurface(*renderer, diamondSurface);
+    SDL_FreeSurface(diamondSurface);
+
+    SDL_Surface* clubSurface = IMG_Load("C:\\belotte\\club.png");                 
+    colorsTextures[1] = SDL_CreateTextureFromSurface(*renderer, clubSurface);
+    SDL_FreeSurface(clubSurface);
+
+    SDL_Surface* heartSurface = IMG_Load("C:\\belotte\\heart.png");                 
+    colorsTextures[2] = SDL_CreateTextureFromSurface(*renderer, heartSurface);
+    SDL_FreeSurface(heartSurface);     
+
+    SDL_Surface* spadeSurface = IMG_Load("C:\\belotte\\spade.png");                 
+    colorsTextures[3] = SDL_CreateTextureFromSurface(*renderer, spadeSurface);
+    SDL_FreeSurface(spadeSurface);     
+}
+
+void initTrumpColorDestRect(gameDirector* gd, int windowWidth, int windowHeight) {
+
+    double centerX, centerY, width, height, x, y; 
+    width = .50 * windowHeight;  
+    height = width;
+    centerX = windowWidth / 2;
+    centerY = windowHeight / 2; 
+
+    getPositionFromCenter(centerX, centerY, width, height, &x, &y);
+    gd->trumpDestRect.w = width;
+    gd->trumpDestRect.h = height;
+    gd->trumpDestRect.x = x;
+    gd->trumpDestRect.y = y;           
+}
+
+void addTrumpTexturesToGameDirector(gameDirector* gd, SDL_Texture* trumpTextures[amountColor]) {
+    
+    for (int i = 0; i < amountColor; i++) {
+
+        gd->trumpTextures[i] = trumpTextures[i];
+    }  
+}
+
+int getCrossAndCircleDestRectsIndexFromPlayer(int player) {
+
+    int resultIndex = 0;
+
+    for (int i = 0, j = 2; i < players; i++, j++) {
+
+        if (j > 4) {
+            j = 1;
+        }
+
+        if (player == j) {
+
+            resultIndex = i;
+            return resultIndex;
+        }        
+    }
+    return 0;
+}
+
+void crossAndCirclesRenderCopy(SDL_Renderer* renderer, gameDirector* gd, SDL_Texture* crossTexture, SDL_Texture* circleTexture, SDL_Rect crossAndCircleDestRects[players][2]) {
+    
+    int player = getPlayerFromGameDirector(*gd);
+    int playerIndex = getCrossAndCircleDestRectsIndexFromPlayer(player);   
+    SDL_RenderCopy(renderer, crossTexture, NULL, &crossAndCircleDestRects[playerIndex][0]);
+    SDL_RenderCopy(renderer, circleTexture, NULL, &crossAndCircleDestRects[playerIndex][1]);
+}
+
+void scoreRenderCopy(SDL_Renderer* renderer, SDL_Texture* scoreTexture[amountTeams], SDL_Rect scoreDestRects[amountTeams]) {
+      
+    for (int i = 0; i < amountTeams; i++) {
+
+        if(scoreDestRects[i].h != 0) {   
+            SDL_RenderCopy(renderer, scoreTexture[i], NULL, &scoreDestRects[i]);       
+        }
+    }        
+}
+
+void trumpColorRenderCopy(SDL_Renderer* renderer, gameDirector* gd) {
+
+    for (int i = 0; i < amountColor; i++) {
+
+        if(gd->trump.color == i + 1) {
+
+            SDL_RenderCopy(renderer, gd->trumpTextures[i], NULL, &gd->trumpDestRect);
+        }
+    }
+}
+
 void playerHandsRenderCopy(SDL_Renderer* renderer, team teams[amountTeams], double angle, SDL_Point rotationCenters[teamsPlayers][playersCards]) {
         
-    for(int h = 0; h < amountTeams; h++) {
+    for(int h = 0; h < teamsPlayers; h++) {
 
-        for (int i = 0; i < teamsPlayers; i++) {
+        for (int i = 0; i < amountTeams; i++) {
             
             for (int j = 0; j < playersCards; j++) {
                
-                if (teams[h].playerHand[i][j].color != 0) {
+                if (teams[i].playerHand[h][j].color != 0) {
                     
                     if (i == 1) {
 
-                        SDL_RenderCopyEx(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j], angle, &rotationCenters[i][j], SDL_FLIP_NONE); 
+                        SDL_RenderCopyEx(renderer, teams[i].playerHand[h][j].texture, NULL,  &teams[i].playerHandDestRects[h][j], angle, &rotationCenters[h][j], SDL_FLIP_NONE); 
                     }
                     else {                   
-                        SDL_RenderCopy(renderer, teams[h].playerHand[i][j].texture, NULL,  &teams[h].playerHandDestRects[i][j]);   
+                        SDL_RenderCopy(renderer, teams[i].playerHand[h][j].texture, NULL,  &teams[i].playerHandDestRects[h][j]);   
                     }
                 }
             }
@@ -1335,7 +1506,7 @@ Uint32 myCallbackFirst(Uint32 interval, void* param) {
 
 int SDL_main(int argc, char *argv[]) {
 
-   // printf("hello world!\n\n"); 
+    printf("hello world!\n\n"); 
 
     int windowWidth = 600;
     int windowHeight = 600;
@@ -1358,7 +1529,7 @@ int SDL_main(int argc, char *argv[]) {
     gameState gs = FirstDeal;
     gameState gsNextState = Default; 
 
-    shuffleCards(gd.deck);
+   
 
     {
     //shuffleCards(gd.deck); 
@@ -1562,7 +1733,7 @@ int SDL_main(int argc, char *argv[]) {
    
     SDL_Rect deckDestRects[amountColor][playersCards];    
     initDeckDestRects(deckDestRects, windowWidth, windowHeight);
-    addDeckDestRectsToDeck(deckDestRects, &gd);
+    addDeckDestRectsToGameDirector(deckDestRects, &gd);
     
     SDL_Rect trickDestRects[trickCards]; 
     initTrickDestRects(trickDestRects, windowWidth, windowHeight);
@@ -1576,10 +1747,21 @@ int SDL_main(int argc, char *argv[]) {
     initCrossTexture(&crossTexture, &renderer); 
     SDL_Texture* circleTexture;
     initCircleTexture(&circleTexture, &renderer);
-
     SDL_Rect crossAndCircleDestRects[players][2];          
     initCrossAndCircleContainerDestRects(crossAndCircleDestRects, windowWidth, windowHeight);
+    
+    SDL_Texture* trumpColorsTextures[amountColor];
+    initTrumpColorTexture(trumpColorsTextures, &renderer);   
+    initTrumpColorDestRect(&gd, windowWidth, windowHeight);
+    addTrumpTexturesToGameDirector(&gd, trumpColorsTextures);
 
+    TTF_Init();
+    TTF_Font* font;
+    SDL_Texture* scoreTexture[amountTeams];
+    initScoreTexture(&renderer, scoreTexture, font, teams);
+    SDL_Rect scoreDestRects[amountTeams];
+    initScoreDestRects(scoreDestRects, windowWidth, windowHeight);
+  
     double angle = 90.0;
     SDL_Point rotationCenters[teamsPlayers][playersCards];
     SDL_Rect destRectsPlayersHands[players][playersCards];
@@ -1587,7 +1769,7 @@ int SDL_main(int argc, char *argv[]) {
     SDL_RenderCopy(renderer, playmatTexture, NULL, &playmatDestRect);   
     SDL_RenderPresent(renderer);
     SDL_Delay(1000);
-   
+
     int countCheckTrickResult = 0;
     int countPlay = 0;
     int trickIndex = 0;
@@ -1613,9 +1795,9 @@ int SDL_main(int argc, char *argv[]) {
                 initPlaymatDestRect(&playmatDestRect, newWidth, newHeight); 
 
                 initDeckDestRects(deckDestRects, newWidth, newHeight);
-                addDeckDestRectsToDeck(deckDestRects, &gd);
+                addDeckDestRectsToGameDirector(deckDestRects, &gd);
 
-                initPlayerHandsDestRects(teams, destRectsPlayersHands, newWidth, newHeight, rotationCenters);                  
+                initPlayerHandsDestRects(teams, destRectsPlayersHands, newWidth, newHeight, rotationCenters); 
                 addPlayerHandsDestRectsToTeams(destRectsPlayersHands, teams); 
 
                 initTrickDestRects(trickDestRects, newWidth, newHeight);
@@ -1625,40 +1807,65 @@ int SDL_main(int argc, char *argv[]) {
                 addTricksStacksDestRectsToTeams(tricksStacksDestRects, teams); 
 
                 initCrossAndCircleContainerDestRects(crossAndCircleDestRects, newWidth, newHeight);
+                initScoreDestRects(scoreDestRects, windowWidth, windowHeight);
+
+                initTrumpColorDestRect(&gd,newWidth, newHeight);
+                addTrumpTexturesToGameDirector(&gd, trumpColorsTextures);
             }
 
             else if (event.type == SDL_MOUSEBUTTONDOWN) {
 
                 int x, y;
-                SDL_GetMouseState(&x, &y);  
+                SDL_GetMouseState(&x, &y); 
 
-                /*if (SDL_PointInRect(&((SDL_Point){x, y}),&crossDestRect) ) {  //verif si ne bug pas lors de lacces a un destrect inexistant
-                                
-                    if (gsNextState == Play) {
+                int crossAndCircleDestRectsIndex = 0;
+                int teamIndex = 1;
+                int playerIndex = 0;                
+                if (gsNextState == TrumpChoice) {
 
-                                    gd.teamEvent = h;
-                                    gd.playerEvent = i;
-                                    gd.choosenCardIndex = j;
-                                    gs = Play; 
-                                }                               
+                    for (int h = 0, k = crossAndCircleDestRectsIndex; h < 2; h++) {
+           
+                        for (int i = playerIndex; i < teamsPlayers; i++) {
+
+                            for (int j = teamIndex; j < amountTeams; j++, k++) {
+                            
+                                if (k > players) {
+                                    break;
+                                }                                
+
+                                if (SDL_PointInRect(&((SDL_Point){x, y}), &crossAndCircleDestRects[k][0]) ) {  
+                                    
+                                    gd.teamEvent = j + 1 ;
+                                    gd.playerEvent = i + 1;                                
+                                    gs = NegativeChoice; 
+                                }  
+
+                                if (SDL_PointInRect(&((SDL_Point){x, y}), &crossAndCircleDestRects[k][1]) ) {  
+                                    gd.teamEvent = j + 1 ;
+                                    gd.playerEvent = i + 1;
+                                    gs = TrumpChoice;                                     
+                                }
                             }
-                }*/
+                            teamIndex = 0; 
+                        }                                              
+                    }                    
+                }  
 
-                for (int h = 0; h < amountTeams; h++) {
+                if (gsNextState == Play) {
+                    
+                    for (int h = 0; h < teamsPlayers; h++) {
 
-                    for (int i = 0; i < teamsPlayers; i++) {
+                        for (int i = 0; i < amountTeams; i++) {
 
-                        for (int j = 0; j < playersCards; j++) {
+                            for (int j = 0; j < playersCards; j++) {
 
-                            if (SDL_PointInRect(&((SDL_Point){x, y}), &teams[h].playerHandDestRects[i][j]) ) {  //verif si ne bug pas lors de lacces a un destrect inexistant
-                                
-                                if (gsNextState == Play) {
-
-                                    gd.teamEvent = h;
-                                    gd.playerEvent = i;
+                                if (SDL_PointInRect(&((SDL_Point){x, y}), &teams[i].playerHandDestRects[h][j]) ) { 
+                                   
+                                    gd.teamEvent = i + 1;
+                                    gd.playerEvent = h + 1;
                                     gd.choosenCardIndex = j;
                                     gs = Play; 
-                                }                               
+                                }                             
                             }
                         }
                     }   
@@ -1677,25 +1884,35 @@ int SDL_main(int argc, char *argv[]) {
 
             case FirstDeal:
 
+                shuffleCards(gd.deck);  
                 firstDeal(&gd, teams);  
 
                 gs = SortAll;
                 gsNextState = TrumpChoice;
                 break;
-            
-            case TrumpChoice:
+
+            case NegativeChoice:
+
+                if (knowIfPlayerTurn(&gd)) {
                
-                // dans event gd.team player = ?
-                modifyTrump(&gd);
-                setActualPlayerWithEvent(&gd);
-                addCardToPlayerHand(teams[gd.team].playerHand[gd.player], playersCards - 1,  gd.deck, trumpIndex);     
-                
-                gs = SecondDeal;
+                    nextPlayer(&gd);
+                    gs = Default;                    
+                }      
+                break;
+
+            case TrumpChoice:  
+                          
+                if (knowIfPlayerTurn(&gd)) {
+
+                    modifyTrump(&gd);                                                
+                    addCardToPlayerHand(teams[gd.team - 1].playerHand[gd.player - 1], playersCards - 1,  gd.deck, trumpIndex); 
+                    gs = SecondDeal;    
+                }    
                 break;    
 
             case SecondDeal:
 
-                int trumpPlayer[2] = {gd.team,gd.player};
+                int trumpPlayer[2] = {gd.team - 1, gd.player - 1};
                 secondDeal(&gd, teams, trumpPlayer);
 
                 gs = SortAll;
@@ -1703,30 +1920,33 @@ int SDL_main(int argc, char *argv[]) {
                 break;
 
             case Play:
-
-                // dans event gd.choosenCardIndex, gd.teamEvent gd.playerEvent = ?               
+                              
                 int isPlayerTurn = play(&gd, teams, trickIndex);               
                 if (isPlayerTurn) { 
 
                     countPlay++;
                     trickIndex++;
-                    nextPlayer(&gd);
+                    nextPlayer(&gd); 
                 }
-                
+
+                gs = Default;
                 if (countPlay >= players) {
 
                     countPlay = 0;
+                    trickIndex = 0;
                     gs = CheckTrickResult;
                 }                
                 break;
 
             case CheckTrickResult:
 
+                SDL_Delay(2000);
                 checkTrickResult(&gd, teams);
+                initScoreTexture(&renderer, scoreTexture, font, teams);
                 countCheckTrickResult++;
                 initTrick(gd.trick);
 
-                gs = Play;
+                gs = Default;
                 if (countCheckTrickResult >= tricks) {
                     countCheckTrickResult = 0;
                    gs = FinalCheckTricksResults; 
@@ -1739,34 +1959,37 @@ int SDL_main(int argc, char *argv[]) {
             default:          
                 break;
         }
-         
+      
         initPlayerHandsDestRects(teams, destRectsPlayersHands, windowWidth, windowHeight, rotationCenters);                  
-        addPlayerHandsDestRectsToTeams(destRectsPlayersHands, teams);  
-        SDL_RenderCopy(renderer, playmatTexture, NULL, &playmatDestRect);        
+        addPlayerHandsDestRectsToTeams(destRectsPlayersHands, teams);          
+
+        SDL_RenderCopy(renderer, playmatTexture, NULL, &playmatDestRect);
+        trumpColorRenderCopy(renderer, &gd);  
+        crossAndCirclesRenderCopy(renderer, &gd, crossTexture, circleTexture, crossAndCircleDestRects); 
         deckRenderCopy(renderer, &gd);
         playerHandsRenderCopy(renderer, teams, angle, rotationCenters); 
         trickRenderCopy(renderer, &gd);
-        tricksStacksRenderCopy(renderer, teams);  
-        tricksStacksRenderCopy(renderer, teams); 
+        tricksStacksRenderCopy(renderer, teams);                 
+        scoreRenderCopy(renderer, scoreTexture, scoreDestRects);       
         
-        for (int i = 0; i < players; i++) {
-
-            SDL_RenderCopy(renderer, crossTexture, NULL, &crossAndCircleDestRects[i][0]);
-            SDL_RenderCopy(renderer, circleTexture, NULL, &crossAndCircleDestRects[i][1]);
-        }
-        
-
         SDL_RenderPresent(renderer);   
     }
    
-    for (int i = 0; i <totalCards; i++) {
+    for (int i = 0; i < totalCards; i++) {
         SDL_DestroyTexture(gd.deck[i].texture);
     }
+    for (int i = 0; i < amountColor; i++) {
+        SDL_DestroyTexture(trumpColorsTextures[i]);
+    }   
+    SDL_DestroyTexture(scoreTexture[0]);
+    SDL_DestroyTexture(scoreTexture[1]);
     SDL_DestroyTexture(crossTexture);   
     SDL_DestroyTexture(circleTexture);  
     SDL_DestroyTexture(playmatTexture);   
     SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window); 
+    SDL_DestroyWindow(window);
+    TTF_CloseFont(font);
+    TTF_Quit(); 
     SDL_Quit();       
     return 0;
 }
